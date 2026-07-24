@@ -30,7 +30,6 @@ import {
   Folder as DocumentIcon,
   Schedule as TimesheetIcon,
   AssignmentTurnedIn as DailyReportIcon,
-  Notifications as NotificationIcon,
   Domain as OrgIcon,
   HelpOutline as HelpIcon,
   FormatListBulleted as BacklogIcon,
@@ -50,7 +49,7 @@ export const Sidebar: React.FC = () => {
   const { user } = useAuth();
   const userRole = user?.role || 'ROLE_SUPER_ADMIN';
 
-  // Dedicated Corporate Client Menu (8 Tailored Client Portal Modules)
+  // Dedicated Corporate Client Menu (7 Tailored Client Portal Modules)
   const clientMenuItems = [
     { text: 'Executive Overview', icon: <ProgressIcon />, path: '/clients/portal?tab=0' },
     { text: 'Projects & Progress', icon: <ProjectIcon />, path: '/clients/portal?tab=1' },
@@ -58,11 +57,10 @@ export const Sidebar: React.FC = () => {
     { text: 'MOUs & Vault', icon: <DocumentIcon />, path: '/clients/portal?tab=3' },
     { text: 'Support Tickets', icon: <TicketIcon />, path: '/clients/portal?tab=4' },
     { text: 'Meetings & Schedule', icon: <MeetingIcon />, path: '/clients/portal?tab=5' },
-    { text: 'Notifications', icon: <NotificationIcon />, path: '/notifications' },
     { text: 'Settings & Profile', icon: <SettingsIcon />, path: '/settings' },
   ];
 
-  // Dedicated Project Manager Menu (17 Specific Delivery Modules)
+  // Dedicated Project Manager Menu (16 Specific Delivery Modules)
   const pmMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Projects', icon: <ProjectIcon />, path: '/projects' },
@@ -78,7 +76,6 @@ export const Sidebar: React.FC = () => {
     { text: 'Clients', icon: <ClientIcon />, path: '/clients' },
     { text: 'Milestones', icon: <MilestoneIcon />, path: '/milestones' },
     { text: 'Calendar', icon: <CalendarIcon />, path: '/calendar' },
-    { text: 'Notifications', icon: <NotificationIcon />, path: '/notifications' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
@@ -101,7 +98,6 @@ export const Sidebar: React.FC = () => {
     { text: 'Timesheet', icon: <TimesheetIcon />, path: '/timesheet', roles: ['ROLE_EMPLOYEE', 'ROLE_TEAM_LEAD'] },
     { text: 'Daily Work Report', icon: <DailyReportIcon />, path: '/daily-report', roles: ['ROLE_EMPLOYEE', 'ROLE_TEAM_LEAD'] },
     { text: 'Reports', icon: <ReportIcon />, path: '/reports', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_HR_MANAGER', 'ROLE_ENG_MANAGER'] },
-    { text: 'Notifications', icon: <NotificationIcon />, path: '/notifications' },
     { text: 'Audit Logs', icon: <AuditIcon />, path: '/audit-logs', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN'] },
     { text: 'Help & Support', icon: <HelpIcon />, path: '/help' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
@@ -118,7 +114,6 @@ export const Sidebar: React.FC = () => {
     { text: 'Daily Work Reports', icon: <DailyReportIcon />, path: '/daily-report' },
     { text: 'Meetings', icon: <MeetingIcon />, path: '/meetings' },
     { text: 'Department Reports', icon: <ReportIcon />, path: '/reports' },
-    { text: 'Notifications', icon: <NotificationIcon />, path: '/notifications' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
