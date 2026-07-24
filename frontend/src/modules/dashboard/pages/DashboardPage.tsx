@@ -68,7 +68,6 @@ export const DashboardPage: React.FC = () => {
 
   const [assignedTasksList, setAssignedTasksList] = useState<any[]>([]);
   const [assignedProjectsList, setAssignedProjectsList] = useState<any[]>([]);
-  const [myNotificationsList, setMyNotificationsList] = useState<any[]>([]);
 
   // Dynamic Recharts & Approvals Stream State (SQL Database real-time data)
   const [approvals, setApprovals] = useState<any[]>([]);
@@ -142,7 +141,6 @@ export const DashboardPage: React.FC = () => {
           const list = Array.isArray(raw) ? raw : (raw?.content || []);
           const unread = list.filter((n: any) => !n.isRead);
           setStats((prev) => ({ ...prev, unreadNotifications: unread.length }));
-          setMyNotificationsList(list.slice(0, 5));
         })
         .catch(() => {});
 
@@ -587,30 +585,6 @@ export const DashboardPage: React.FC = () => {
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     Your assigned project progress will appear here once projects are linked to your account.
-                  </Typography>
-                )}
-              </Paper>
-
-              <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                  Recent Alerts & Notifications
-                </Typography>
-                {myNotificationsList.length > 0 ? (
-                  <Stack spacing={1}>
-                    {myNotificationsList.map((note: any) => (
-                      <Box key={note.id} sx={{ p: 1, bgcolor: note.isRead ? 'background.paper' : 'action.selected', borderRadius: 1 }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', color: 'primary.main' }}>
-                          {note.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {note.message}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    No unread notifications.
                   </Typography>
                 )}
               </Paper>
