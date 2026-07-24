@@ -19,6 +19,11 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   VideoCall as VideoCallIcon,
@@ -27,6 +32,8 @@ import {
   Description as DocIcon,
   Business as OrgIcon,
   CheckCircle as AttendanceIcon,
+  MoreVert as MoreVertIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { EnterpriseScheduleMeetingModal } from '../components/EnterpriseScheduleMeetingModal';
 import api from '../../../config/axios.config';
@@ -62,6 +69,10 @@ export const MeetingListPage: React.FC = () => {
   const [taskCreatedNotice, setTaskCreatedNotice] = useState<string | null>(null);
 
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
+
+  // Action Menu State
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [activeMeeting, setActiveMeeting] = useState<MeetingItem | null>(null);
 
   const fetchMeetings = () => {
     api.get('/meetings')
@@ -109,6 +120,30 @@ export const MeetingListPage: React.FC = () => {
   const handleSaveMoM = () => {
     setMomDialogOpen(false);
     setTaskCreatedNotice(`Minutes of Meeting (MoM) published for "${selectedMeetingTitle}". Action item task automatically created & assigned on Task Kanban Board.`);
+  };
+
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, meeting: MeetingItem) => {
+    setMenuAnchorEl(event.currentTarget);
+    setActiveMeeting(meeting);
+  };
+
+  const handleCloseMenu = () => {
+    setMenuAnchorEl(null);
+    setActiveMeeting(null);
+  };
+
+  const handleDeleteMeeting = async () => {
+    if (!activeMeeting) return;
+    const meetingToDelete = activeMeeting;
+    handleCloseMenu();
+
+    try {
+      await api.delete(`/meetings/${meetingToDelete.id}`);
+      setMeetings((prev) => prev.filter((m) => m.id !== meetingToDelete.id));
+      setNotice(`Meeting "${meetingToDelete.title}" permanently deleted from SQL database.`);
+    } catch (err) {
+      setNotice(`Failed to delete meeting "${meetingToDelete.title}". Please try again.`);
+    }
   };
 
   return (
@@ -213,19 +248,30 @@ export const MeetingListPage: React.FC = () => {
                       )}
                     </TableCell>
                     <TableCell align="right">
-                      <Tooltip title="Join Virtual Meeting Room">
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="secondary"
-                          startIcon={<VideoCallIcon />}
-                          href={m.meetingUrl}
-                          target="_blank"
-                          sx={{ fontWeight: 700 }}
-                        >
-                          Join Room
-                        </Button>
-                      </Tooltip>
+                      <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+                        <Tooltip title="Join Virtual Meeting Room">
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="secondary"
+                            startIcon={<VideoCallIcon />}
+                            href={m.meetingUrl}
+                            target="_blank"
+                            sx={{ fontWeight: 700 }}
+                          >
+                            Join Room
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Meeting Actions">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleOpenMenu(e, m)}
+                            id={`meeting-actions-btn-${m.id}`}
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 ))
@@ -234,6 +280,22 @@ export const MeetingListPage: React.FC = () => {
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* ACTION DOTS DROPDOWN MENU */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleCloseMenu}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={handleDeleteMeeting} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText primary="Delete Meeting" primaryTypographyProps={{ fontWeight: 600, fontSize: '0.88rem' }} />
+        </MenuItem>
+      </Menu>
 
       {/* ENTERPRISE SCHEDULE MEETING MODAL */}
       <EnterpriseScheduleMeetingModal

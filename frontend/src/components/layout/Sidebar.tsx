@@ -93,7 +93,6 @@ export const Sidebar: React.FC = () => {
     { text: 'Resource Allocation', icon: <ResourceIcon />, path: '/resource-allocation', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_ENG_MANAGER'] },
     { text: 'Milestones', icon: <MilestoneIcon />, path: '/milestones', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_ENG_MANAGER'] },
     { text: 'Sprints', icon: <SprintIcon />, path: '/sprints', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_ENG_MANAGER'] },
-    { text: 'Risks', icon: <RiskIcon />, path: '/risks', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_ENG_MANAGER'] },
     { text: 'Tasks', icon: <TaskIcon />, path: '/tasks' },
     { text: 'My Projects', icon: <ProjectIcon />, path: '/my-projects', roles: ['ROLE_EMPLOYEE', 'ROLE_TEAM_LEAD'] },
     { text: 'Clients', icon: <ClientIcon />, path: '/clients', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN'] },

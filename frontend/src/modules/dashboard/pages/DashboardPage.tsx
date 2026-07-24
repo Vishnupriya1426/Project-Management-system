@@ -24,15 +24,8 @@ import {
   MenuItem,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Assignment as ProjectIcon,
-  CheckCircle as TaskIcon,
   Event as MeetingIcon,
-  BarChart as ReportIcon,
   Check as ApproveIcon,
-  GroupAdd as AssignTeamIcon,
-  DirectionsRun as SprintIcon,
-  Code as CodeIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -199,7 +192,7 @@ export const DashboardPage: React.FC = () => {
             }}
           >
             <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={7}>
+              <Grid item xs={12}>
                 <Chip label="Super Admin Control Center" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
                   Welcome Back, Super Administrator 👋
@@ -207,28 +200,6 @@ export const DashboardPage: React.FC = () => {
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
                   Today is <strong>Wednesday, 22 July 2026</strong> • Enterprise System Health: <Chip label="99.9% Operational" color="success" size="small" sx={{ fontWeight: 700 }} />
                 </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={5} sx={{ textAlign: { md: 'right' } }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="flex-end" flexWrap="wrap">
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setEmployeeWizardOpen(true)}
-                    sx={{ bgcolor: '#fff', color: '#0078D4', fontWeight: 700, '&:hover': { bgcolor: '#f0f0f0' } }}
-                  >
-                    + Add Employee
-                  </Button>
-                  <Button variant="contained" color="secondary" startIcon={<ProjectIcon />} onClick={() => setProjectWizardOpen(true)} sx={{ fontWeight: 700 }}>
-                    + Create Project
-                  </Button>
-                  <Button variant="outlined" startIcon={<MeetingIcon />} onClick={() => setMeetingModalOpen(true)} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    + Schedule Meeting
-                  </Button>
-                  <Button variant="outlined" startIcon={<ReportIcon />} onClick={() => setReportModalOpen(true)} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    Generate Report
-                  </Button>
-                </Stack>
               </Grid>
             </Grid>
           </Paper>
@@ -294,7 +265,7 @@ export const DashboardPage: React.FC = () => {
             }}
           >
             <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={7}>
+              <Grid item xs={12}>
                 <Chip label="Project Manager Control Center" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
                   Good Morning, {user?.firstName ? `${user.firstName} ${user.lastName}` : 'Project Manager'} 👋
@@ -302,26 +273,6 @@ export const DashboardPage: React.FC = () => {
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
                   Today's Date: <strong>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong> • Project Delivery Status: <Chip label="All Systems Operational" color="success" size="small" sx={{ fontWeight: 700 }} />
                 </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={5} sx={{ textAlign: { md: 'right' } }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="flex-end" flexWrap="wrap">
-                  <Button variant="contained" color="secondary" startIcon={<ProjectIcon />} onClick={() => setProjectWizardOpen(true)} sx={{ fontWeight: 700 }}>
-                    + Create Project
-                  </Button>
-                  <Button variant="contained" startIcon={<SprintIcon />} onClick={() => setSprintModalOpen(true)} sx={{ bgcolor: '#107C41', color: '#fff', fontWeight: 700 }}>
-                    + Create Sprint
-                  </Button>
-                  <Button variant="outlined" startIcon={<MeetingIcon />} onClick={() => setMeetingModalOpen(true)} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    + Schedule Meeting
-                  </Button>
-                  <Button variant="outlined" startIcon={<AssignTeamIcon />} onClick={() => setAssignTeamModalOpen(true)} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    + Assign Team
-                  </Button>
-                  <Button variant="outlined" startIcon={<ReportIcon />} onClick={() => setReportModalOpen(true)} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    Generate Report
-                  </Button>
-                </Stack>
               </Grid>
             </Grid>
           </Paper>
@@ -423,7 +374,7 @@ export const DashboardPage: React.FC = () => {
             }}
           >
             <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={7}>
+              <Grid item xs={12}>
                 <Chip label="Engineering Manager Control" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
                   Welcome, Engineering Manager 👋
@@ -431,20 +382,6 @@ export const DashboardPage: React.FC = () => {
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
                   Active Engineering Squads: <strong>8 Teams</strong> • Code Pipeline: <Chip label="Build Passing (88% Coverage)" color="success" size="small" sx={{ fontWeight: 700 }} />
                 </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={5} sx={{ textAlign: { md: 'right' } }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="flex-end" flexWrap="wrap">
-                  <Button variant="contained" startIcon={<AssignTeamIcon />} onClick={() => setAssignTeamModalOpen(true)} sx={{ bgcolor: '#fff', color: '#107C41', fontWeight: 700 }}>
-                    + Assign Developers
-                  </Button>
-                  <Button variant="outlined" startIcon={<CodeIcon />} onClick={() => setActionNotice('Code Review Request broadcasted to Senior Engineers.')} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    + Code Review
-                  </Button>
-                  <Button variant="outlined" startIcon={<ReportIcon />} onClick={() => setReportModalOpen(true)} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    Team Velocity Report
-                  </Button>
-                </Stack>
               </Grid>
             </Grid>
           </Paper>
@@ -508,7 +445,7 @@ export const DashboardPage: React.FC = () => {
             }}
           >
             <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={7}>
+              <Grid item xs={12}>
                 <Chip label="Employee Portal Workspace" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
                   Good Morning, {user?.firstName ? `${user.firstName} ${user.lastName}` : 'Team Member'} 👋
@@ -516,23 +453,6 @@ export const DashboardPage: React.FC = () => {
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
                   {user?.role ?? 'Employee'} • Your tasks and project assignments are loaded below
                 </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={5} sx={{ textAlign: { md: 'right' } }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="flex-end" flexWrap="wrap">
-                  <Button variant="contained" startIcon={<TaskIcon />} onClick={() => navigate('/tasks')} sx={{ bgcolor: '#fff', color: '#00828A', fontWeight: 700 }}>
-                    Start Work
-                  </Button>
-                  <Button variant="outlined" startIcon={<ReportIcon />} onClick={() => navigate('/daily-report')} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    Submit Daily Report
-                  </Button>
-                  <Button variant="outlined" startIcon={<TaskIcon />} onClick={() => navigate('/tasks')} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    View Tasks
-                  </Button>
-                  <Button variant="outlined" startIcon={<MeetingIcon />} onClick={() => setMeetingModalOpen(true)} sx={{ color: '#fff', borderColor: '#fff' }}>
-                    Join Meeting
-                  </Button>
-                </Stack>
               </Grid>
             </Grid>
           </Paper>

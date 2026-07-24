@@ -191,4 +191,15 @@ public class MeetingController {
 
         return map;
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteMeeting(
+            @PathVariable Long id, HttpServletRequest request) {
+        if (meetingRepository.existsById(id)) {
+            meetingRepository.deleteById(id);
+            return ResponseEntity.ok(ApiResponse.success(null, "Meeting deleted successfully", request.getRequestURI()));
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
+
