@@ -65,20 +65,20 @@ public class AuditLogController {
         });
 
         List<Map<String, Object>> result = logs.stream()
-                .filter(l -> module == null || module.equalsIgnoreCase("ALL") || (l.getModule() != null && l.getModule().equalsIgnoreCase(module)))
-                .filter(l -> action == null || action.equalsIgnoreCase("ALL") || (l.getAction() != null && l.getAction().toUpperCase().contains(action.toUpperCase())))
-                .filter(l -> role == null || role.equalsIgnoreCase("ALL") || (l.getUserRole() != null && l.getUserRole().equalsIgnoreCase(role)))
-                .filter(l -> status == null || status.equalsIgnoreCase("ALL") || (l.getStatus() != null && l.getStatus().equalsIgnoreCase(status)))
+                .map(this::mapToDTO)
+                .filter(l -> module == null || module.equalsIgnoreCase("ALL") || (l.get("module") != null && l.get("module").toString().equalsIgnoreCase(module)))
+                .filter(l -> action == null || action.equalsIgnoreCase("ALL") || (l.get("action") != null && l.get("action").toString().toUpperCase().contains(action.toUpperCase())))
+                .filter(l -> role == null || role.equalsIgnoreCase("ALL") || (l.get("userRole") != null && l.get("userRole").toString().equalsIgnoreCase(role)))
+                .filter(l -> status == null || status.equalsIgnoreCase("ALL") || (l.get("status") != null && l.get("status").toString().equalsIgnoreCase(status)))
                 .filter(l -> {
                     if (search == null || search.isBlank()) return true;
                     String s = search.toLowerCase();
-                    return (l.getUserEmail() != null && l.getUserEmail().toLowerCase().contains(s)) ||
-                           (l.getAction() != null && l.getAction().toLowerCase().contains(s)) ||
-                           (l.getModule() != null && l.getModule().toLowerCase().contains(s)) ||
-                           (l.getEntityName() != null && l.getEntityName().toLowerCase().contains(s)) ||
-                           (l.getDetails() != null && l.getDetails().toLowerCase().contains(s));
+                    return (l.get("userEmail") != null && l.get("userEmail").toString().toLowerCase().contains(s)) ||
+                           (l.get("action") != null && l.get("action").toString().toLowerCase().contains(s)) ||
+                           (l.get("module") != null && l.get("module").toString().toLowerCase().contains(s)) ||
+                           (l.get("entityName") != null && l.get("entityName").toString().toLowerCase().contains(s)) ||
+                           (l.get("details") != null && l.get("details").toString().toLowerCase().contains(s));
                 })
-                .map(this::mapToDTO)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(ApiResponse.success(result, "Immutable audit logs retrieved successfully", request.getRequestURI()));
@@ -113,19 +113,19 @@ public class AuditLogController {
                 cs.endText();
 
                 int y = 690;
-                for (AuditLog l : logs) {
+                for (AuditLog logEntity : logs) {
+                    Map<String, Object> l = mapToDTO(logEntity);
                     cs.beginText();
                     cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 10);
                     cs.newLineAtOffset(50, y);
-                    String ts = l.getTimestamp() != null ? l.getTimestamp().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : "2026-07-24";
-                    cs.showText("[" + ts + "] " + (l.getAction() != null ? l.getAction() : "ACTION") + " | " + (l.getUserEmail() != null ? l.getUserEmail() : "admin@spems.com") + " (" + (l.getUserRole() != null ? l.getUserRole() : "ROLE_SUPER_ADMIN") + ")");
+                    cs.showText("[" + l.get("timestamp") + "] " + l.get("action") + " | " + l.get("userEmail") + " (" + l.get("userRole") + ")");
                     cs.endText();
 
                     y -= 14;
                     cs.beginText();
                     cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 9);
                     cs.newLineAtOffset(65, y);
-                    cs.showText("Module: " + (l.getModule() != null ? l.getModule() : "System") + " | Target: " + l.getEntityName() + " #" + (l.getEntityId() != null ? l.getEntityId() : 1) + " | Status: " + (l.getStatus() != null ? l.getStatus() : "SUCCESS") + " | IP: " + (l.getIpAddress() != null ? l.getIpAddress() : "127.0.0.1"));
+                    cs.showText("Module: " + l.get("module") + " | Target: " + l.get("entityName") + " #" + l.get("entityId") + " | Status: " + l.get("status") + " | IP: " + l.get("ipAddress"));
                     cs.endText();
 
                     y -= 20;
@@ -163,18 +163,19 @@ public class AuditLogController {
             headerRow.createCell(9).setCellValue("Details");
 
             int rowIdx = 1;
-            for (AuditLog l : logs) {
+            for (AuditLog logEntity : logs) {
+                Map<String, Object> l = mapToDTO(logEntity);
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(l.getId() != null ? l.getId() : rowIdx);
-                row.createCell(1).setCellValue(l.getTimestamp() != null ? l.getTimestamp().toString() : "");
-                row.createCell(2).setCellValue(l.getUserEmail() != null ? l.getUserEmail() : "admin@spems.com");
-                row.createCell(3).setCellValue(l.getUserRole() != null ? l.getUserRole() : "ROLE_SUPER_ADMIN");
-                row.createCell(4).setCellValue(l.getModule() != null ? l.getModule() : "System");
-                row.createCell(5).setCellValue(l.getAction() != null ? l.getAction() : "");
-                row.createCell(6).setCellValue((l.getEntityName() != null ? l.getEntityName() : "") + " #" + (l.getEntityId() != null ? l.getEntityId() : 0));
-                row.createCell(7).setCellValue(l.getIpAddress() != null ? l.getIpAddress() : "127.0.0.1");
-                row.createCell(8).setCellValue(l.getStatus() != null ? l.getStatus() : "SUCCESS");
-                row.createCell(9).setCellValue(l.getDetails() != null ? l.getDetails() : "");
+                row.createCell(0).setCellValue(l.get("id").toString());
+                row.createCell(1).setCellValue(l.get("timestamp").toString());
+                row.createCell(2).setCellValue(l.get("userEmail").toString());
+                row.createCell(3).setCellValue(l.get("userRole").toString());
+                row.createCell(4).setCellValue(l.get("module").toString());
+                row.createCell(5).setCellValue(l.get("action").toString());
+                row.createCell(6).setCellValue(l.get("entityName") + " #" + l.get("entityId"));
+                row.createCell(7).setCellValue(l.get("ipAddress").toString());
+                row.createCell(8).setCellValue(l.get("status").toString());
+                row.createCell(9).setCellValue(l.get("details").toString());
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -190,13 +191,38 @@ public class AuditLogController {
         map.put("timestamp", l.getTimestamp() != null ? l.getTimestamp().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "2026-07-24 10:00:00");
         map.put("userEmail", l.getUserEmail() != null ? l.getUserEmail() : "admin@spems.com");
         map.put("userRole", l.getUserRole() != null ? l.getUserRole() : "ROLE_SUPER_ADMIN");
-        map.put("module", l.getModule() != null ? l.getModule() : "System");
-        map.put("action", l.getAction() != null ? l.getAction() : "ACTIVITY");
-        map.put("entityName", l.getEntityName() != null ? l.getEntityName() : "System");
+
+        String rawModule = l.getModule();
+        String rawAction = l.getAction() != null ? l.getAction() : "ACTIVITY";
+        String rawEntity = l.getEntityName() != null ? l.getEntityName() : "System";
+
+        // Clean Action names
+        String cleanAction = rawAction;
+        if ("EMPLOYEE_CREATED".equalsIgnoreCase(rawAction)) cleanAction = "Employee Created";
+        else if ("TASK_CREATED".equalsIgnoreCase(rawAction)) cleanAction = "Task Assigned";
+        else if ("TEAM_CREATED".equalsIgnoreCase(rawAction)) cleanAction = "Team Created";
+        else if ("ORG_CREATED".equalsIgnoreCase(rawAction) || "CLIENT_CREATED".equalsIgnoreCase(rawAction)) cleanAction = "Organization Created";
+        else if ("PROJECT_CREATED".equalsIgnoreCase(rawAction)) cleanAction = "Project Created";
+
+        // Clean Module names
+        String cleanModule = rawModule;
+        if (cleanModule == null || "System".equalsIgnoreCase(cleanModule) || cleanModule.isBlank()) {
+            if (rawEntity.equalsIgnoreCase("Employee") || cleanAction.contains("Employee")) cleanModule = "Employees";
+            else if (rawEntity.equalsIgnoreCase("Task") || cleanAction.contains("Task")) cleanModule = "Tasks & Meetings";
+            else if (rawEntity.equalsIgnoreCase("Team") || cleanAction.contains("Team")) cleanModule = "Teams & Resource Allocation";
+            else if (rawEntity.equalsIgnoreCase("Organization") || rawEntity.equalsIgnoreCase("Client") || cleanAction.contains("Organization")) cleanModule = "Organization";
+            else if (rawEntity.equalsIgnoreCase("Project") || cleanAction.contains("Project")) cleanModule = "Projects";
+            else if (rawEntity.equalsIgnoreCase("ProjectProposal") || cleanAction.contains("Proposal")) cleanModule = "Clients & Proposals";
+            else cleanModule = "Security";
+        }
+
+        map.put("module", cleanModule);
+        map.put("action", cleanAction);
+        map.put("entityName", rawEntity);
         map.put("entityId", l.getEntityId() != null ? l.getEntityId() : 1);
         map.put("ipAddress", l.getIpAddress() != null ? l.getIpAddress() : "127.0.0.1");
         map.put("status", l.getStatus() != null ? l.getStatus() : "SUCCESS");
-        map.put("details", l.getDetails() != null ? l.getDetails() : "{}");
+        map.put("details", l.getDetails() != null ? l.getDetails() : "Operation executed successfully.");
         return map;
     }
 }
