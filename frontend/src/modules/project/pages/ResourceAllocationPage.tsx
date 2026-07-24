@@ -26,6 +26,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 import api from '../../../config/axios.config';
+import { AllocateResourceModal } from '../components/AllocateResourceModal';
 
 interface Allocation {
   id: number;
@@ -44,6 +45,7 @@ export const ResourceAllocationPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [skillFilter, setSkillFilter] = useState('ALL');
   const [notice, setNotice] = useState<string | null>(null);
+  const [openModal, setOpenModal] = useState(false);
 
   const [allocations, setAllocations] = useState<Allocation[]>([]);
 
@@ -95,7 +97,7 @@ export const ResourceAllocationPage: React.FC = () => {
         </Box>
 
         <Stack direction="row" spacing={1} flexWrap="wrap">
-          <Button variant="contained" startIcon={<AssignIcon />} onClick={() => setNotice('Select employee to assign to project workspace.')}>
+          <Button variant="contained" startIcon={<AssignIcon />} onClick={() => setOpenModal(true)}>
             Assign Employee
           </Button>
           <Button variant="outlined" startIcon={<ReplaceIcon />} onClick={() => setNotice('Employee substitution dialog opened.')}>
@@ -195,6 +197,34 @@ export const ResourceAllocationPage: React.FC = () => {
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* ALLOCATE RESOURCE MODAL */}
+      <AllocateResourceModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        onSuccess={(msg) => {
+          setNotice(msg);
+          setOpenModal(false);
+          // Refresh employee list
+          api.get('/employees').then((res) => {
+            if (res.data?.data && Array.isArray(res.data.data)) {
+              const apiAlloc: Allocation[] = res.data.data.map((e: any) => ({
+                id: e.id,
+                empId: e.employeeCode ?? `EMP-${e.id}`,
+                name: `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim(),
+                role: e.designation ?? '',
+                primarySkill: e.primarySkill ?? '',
+                currentProjects: e.currentProjects ?? '',
+                currentSprint: e.currentSprint ?? '',
+                workload: e.workload ?? 0,
+                availability: e.availability ?? 0,
+                status: e.status ?? 'AVAILABLE',
+              }));
+              setAllocations(apiAlloc);
+            }
+          });
+        }}
+      />
     </Box>
   );
 };
