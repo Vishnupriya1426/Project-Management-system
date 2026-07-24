@@ -39,11 +39,12 @@ export const ReportPage: React.FC = () => {
   useEffect(() => {
     api.get('/reports/summary')
       .then((res) => {
-        if (res.data?.deptData && Array.isArray(res.data.deptData)) {
-          setDeptData(res.data.deptData);
+        const payload = res.data?.data || res.data;
+        if (payload?.deptData && Array.isArray(payload.deptData)) {
+          setDeptData(payload.deptData);
         }
-        if (res.data?.taskBreakdown && Array.isArray(res.data.taskBreakdown)) {
-          setTaskBreakdownData(res.data.taskBreakdown);
+        if (payload?.taskBreakdown && Array.isArray(payload.taskBreakdown)) {
+          setTaskBreakdownData(payload.taskBreakdown);
         }
       })
       .catch(() => {
@@ -51,6 +52,11 @@ export const ReportPage: React.FC = () => {
         setTaskBreakdownData([]);
       });
   }, []);
+
+  const filteredDeptData = deptData.filter((item) => {
+    if (departmentFilter === 'ALL') return true;
+    return item.department.toLowerCase().includes(departmentFilter.toLowerCase());
+  });
 
   const handleExportPDF = () => {
     downloadFileBlob('/reports/pdf?title=SPEMS_Executive_Report', 'SPEMS_Executive_Report.pdf');
@@ -128,7 +134,7 @@ export const ReportPage: React.FC = () => {
             </Typography>
             <Box sx={{ width: '100%', height: 320 }}>
               <ResponsiveContainer>
-                <BarChart data={deptData}>
+                <BarChart data={filteredDeptData.length > 0 ? filteredDeptData : deptData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="department" />
                   <YAxis />
