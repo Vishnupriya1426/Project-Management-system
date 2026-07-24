@@ -27,6 +27,7 @@ public class Employee {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "role"})
     private User user;
 
     @Column(name = "employee_code", nullable = false, unique = true, length = 20)

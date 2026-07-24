@@ -1,5 +1,6 @@
 package com.enterprise.spems.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Notification {
 
     @Id
@@ -23,6 +25,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "role"})
     private User recipient;
 
     @Column(name = "title", nullable = false, length = 150)
