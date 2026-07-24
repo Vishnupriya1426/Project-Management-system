@@ -33,7 +33,6 @@ import {
   ViewKanban as KanbanIcon,
   FormatListBulleted as ListIcon,
   Search as SearchIcon,
-  Refresh as RefreshIcon,
   Visibility as ViewIcon,
   Comment as CommentIcon,
   AttachFile as AttachIcon,
@@ -343,6 +342,16 @@ export const TaskListPage: React.FC = () => {
             <TextField select fullWidth size="small" label="Assignee" value={selectedAssigneeId} onChange={(e) => setSelectedAssigneeId(e.target.value ? Number(e.target.value) : '')}>
               <MenuItem value="">All Staff</MenuItem>
               {employees.map((e) => <MenuItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</MenuItem>)}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={6} sm={1.5}>
+            <TextField select fullWidth size="small" label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <MenuItem value="ALL">All Statuses</MenuItem>
+              <MenuItem value="TODO">To Do</MenuItem>
+              <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+              <MenuItem value="PENDING_REVIEW">Pending Review</MenuItem>
+              <MenuItem value="COMPLETED">Completed</MenuItem>
             </TextField>
           </Grid>
         </Grid>
