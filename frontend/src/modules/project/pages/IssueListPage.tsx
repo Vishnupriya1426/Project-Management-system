@@ -50,15 +50,15 @@ export const IssueListPage: React.FC = () => {
       .then((res) => {
         const items: IssueItem[] = Array.isArray(res.data?.data)
           ? res.data.data.map((i: any) => ({
-              id: i.id,
-              issueCode: i.issueCode ?? i.code ?? `BUG-${i.id}`,
-              title: i.title ?? '',
-              project: i.project?.title ?? '',
-              severity: i.severity ?? 'MEDIUM',
-              reporter: i.reporter ?? '',
-              assignee: i.assignee ? `${i.assignee.firstName} ${i.assignee.lastName}` : '',
-              status: i.status ?? 'OPEN',
-            }))
+            id: i.id,
+            issueCode: i.issueCode ?? i.code ?? `BUG-${i.id}`,
+            title: i.title ?? '',
+            project: i.project?.title ?? '',
+            severity: i.severity ?? 'MEDIUM',
+            reporter: i.reporter ?? '',
+            assignee: i.assignee ? `${i.assignee.firstName} ${i.assignee.lastName}` : '',
+            status: i.status ?? 'OPEN',
+          }))
           : [];
         setIssues(items);
       })

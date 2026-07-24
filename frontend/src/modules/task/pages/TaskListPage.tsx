@@ -131,10 +131,10 @@ export const TaskListPage: React.FC = () => {
       tasks.map((t) =>
         t.id === selectedTask.id
           ? {
-              ...t,
-              progress: newProgress,
-              history: [...t.history, { action: `Progress updated to ${newProgress}%`, timestamp: new Date().toLocaleString() }],
-            }
+            ...t,
+            progress: newProgress,
+            history: [...t.history, { action: `Progress updated to ${newProgress}%`, timestamp: new Date().toLocaleString() }],
+          }
           : t
       )
     );
@@ -158,11 +158,11 @@ export const TaskListPage: React.FC = () => {
       tasks.map((t) =>
         t.id === task.id
           ? {
-              ...t,
-              status: 'PENDING_REVIEW',
-              progress: 100,
-              history: [...t.history, { action: 'Submitted for Tech Lead Approval (Pending Review)', timestamp: new Date().toLocaleString() }],
-            }
+            ...t,
+            status: 'PENDING_REVIEW',
+            progress: 100,
+            history: [...t.history, { action: 'Submitted for Tech Lead Approval (Pending Review)', timestamp: new Date().toLocaleString() }],
+          }
           : t
       )
     );

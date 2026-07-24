@@ -2,7 +2,6 @@ package com.enterprise.spems.model.entity;
 
 import com.enterprise.spems.model.enums.PriorityLevel;
 import com.enterprise.spems.model.enums.TaskStatus;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Task {
 
     @Id
@@ -33,7 +31,6 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "client", "projectManager", "team"})
     private Project project;
 
     @Column(name = "title", nullable = false, length = 200)
@@ -44,12 +41,10 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "department"})
     private Employee assignee;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "department"})
     private Employee creator;
 
     @Column(name = "estimated_hours")

@@ -30,7 +30,6 @@ interface Team {
   programManager: string;
   memberCount: number;
   targetSize: number;
-  durationMonths: number;
   deadline: string;
   prdDocument: string | null;
   capacityUtilization: number;
@@ -45,24 +44,27 @@ export const TeamListPage: React.FC = () => {
     api.get('/teams')
       .then((res) => {
         const raw = res.data?.data?.content || res.data?.data;
-        if (Array.isArray(raw) && raw.length > 0) {
+        if (Array.isArray(raw)) {
           const apiTeams: Team[] = raw.map((t: any) => ({
             id: t.id,
-            name: t.name ?? 'Delivery Squad',
-            clientProject: t.project?.title ?? (t.department?.name ?? 'Enterprise Cloud Migration'),
-            teamLeadName: t.teamLead ? `${t.teamLead.firstName} ${t.teamLead.lastName}` : 'Senior Lead Engineer',
-            programManager: t.scrumMaster ? `${t.scrumMaster.firstName} ${t.scrumMaster.lastName}` : 'Agile Scrum Master',
-            memberCount: t.memberCount ?? (t.members ? t.members.length : 5),
+            name: t.name ?? '',
+            clientProject: t.project?.title || t.department?.name || 'Unassigned Project',
+            teamLeadName: t.teamLead ? `${t.teamLead.firstName ?? ''} ${t.teamLead.lastName ?? ''}`.trim() : 'Unassigned',
+            programManager: t.scrumMaster ? `${t.scrumMaster.firstName ?? ''} ${t.scrumMaster.lastName ?? ''}`.trim() : 'Unassigned',
+            memberCount: t.memberCount ?? 1,
             targetSize: t.targetSize ?? 10,
-            durationMonths: 6,
-            deadline: t.deadline ?? '2026-12-31',
-            prdDocument: 'Enterprise_Pod_Spec.pdf',
-            capacityUtilization: 85,
+            deadline: t.deadline || 'No Deadline',
+            prdDocument: t.prdDocument || null,
+            capacityUtilization: t.capacityUtilization ?? 0,
           }));
           setTeams(apiTeams);
+        } else {
+          setTeams([]);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setTeams([]);
+      });
   };
 
   useEffect(() => {
@@ -111,8 +113,8 @@ export const TeamListPage: React.FC = () => {
             <TableBody>
               {teams.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                    No delivery squads formed yet. Click <strong>+ Create Team</strong> to form your first enterprise team.
+                  <TableCell colSpan={8} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No delivery teams created yet. Click "+ Create Team" to launch a new squad.
                   </TableCell>
                 </TableRow>
               ) : (

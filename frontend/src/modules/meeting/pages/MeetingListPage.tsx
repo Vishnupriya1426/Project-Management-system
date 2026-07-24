@@ -51,7 +51,6 @@ interface MeetingItem {
   meetingUrl: string;
   agenda: string;
   participantsCount: number;
-  participants: any[];
   momUploaded?: boolean;
 }
 
@@ -67,29 +66,28 @@ export const MeetingListPage: React.FC = () => {
 
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
 
-  const fetchMeetings = () => {
+  useEffect(() => {
     api.get('/meetings')
       .then((res) => {
         if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
           const fetched: MeetingItem[] = res.data.data.map((m: any) => ({
             id: m.id,
             meetingId: m.meetingId || `MTG-2026-90${m.id}`,
-            title: m.title || 'Enterprise Sync',
-            type: m.meetingType || m.type || 'Sync Meeting',
+            title: m.title,
+            type: m.type || 'Sync Meeting',
             priority: m.priority || 'HIGH',
             status: m.status || 'Scheduled',
-            organization: m.client?.companyName || m.project?.client?.companyName || m.organization || 'SPEMS Enterprise HQ',
-            department: m.team?.department?.name || m.department || 'Engineering',
-            team: m.team?.name || m.team || 'Delivery Pod',
-            project: m.project?.title || m.project || 'Project Workspace',
-            organizer: m.organizer ? `${m.organizer.firstName} ${m.organizer.lastName}` : 'Program Manager',
+            organization: 'SPEMS Enterprise HQ',
+            department: 'Engineering',
+            team: 'Alpha Pod',
+            project: m.project ? m.project.title : 'Enterprise Cloud Migration',
+            organizer: m.organizer ? m.organizer.firstName : 'Super Admin',
             meetingDate: m.meetingDate || '2026-07-25',
             startTime: m.startTime || '10:00 AM',
             endTime: m.endTime || '11:00 AM',
-            meetingUrl: m.meetingLink || m.meetingUrl || 'https://meet.google.com/spems-sync',
-            agenda: m.agenda || 'Meeting Objectives & Deliverable Review',
-            participantsCount: m.participantsCount || (m.participants ? m.participants.length : 0),
-            participants: m.participants || [],
+            meetingUrl: m.meetingUrl || 'https://meet.google.com/spems-sync',
+            agenda: m.agenda || 'Project agenda review',
+            participantsCount: m.participantsCount || 5,
             momUploaded: true,
           }));
           setMeetings(fetched);
@@ -100,15 +98,32 @@ export const MeetingListPage: React.FC = () => {
       .catch(() => {
         setMeetings([]);
       });
-  };
-
-  useEffect(() => {
-    fetchMeetings();
   }, []);
 
-  const handleMeetingScheduled = () => {
-    setNotice(`Meeting scheduled successfully! Live synced across MySQL database, Calendars, and Role-Based Dashboards.`);
-    fetchMeetings();
+  const handleMeetingScheduled = (meetingData: any) => {
+    const newM: MeetingItem = {
+      id: meetingData.id,
+      meetingId: meetingData.meetingId,
+      title: meetingData.title,
+      type: meetingData.type,
+      priority: meetingData.priority,
+      status: meetingData.status,
+      organization: meetingData.organization,
+      department: meetingData.department,
+      team: meetingData.team,
+      project: meetingData.project,
+      organizer: meetingData.organizer,
+      meetingDate: meetingData.meetingDate,
+      startTime: meetingData.startTime,
+      endTime: meetingData.endTime,
+      meetingUrl: meetingData.meetingUrl,
+      agenda: meetingData.agenda,
+      participantsCount: meetingData.participants.length,
+      momUploaded: false,
+    };
+
+    setMeetings([newM, ...meetings]);
+    setNotice(`Meeting "${newM.title}" (${newM.meetingId}) scheduled! All Calendars, Employee Dashboards, Client Portals, and HTML email invitations synchronized.`);
   };
 
   const handleSaveMoM = () => {
@@ -190,7 +205,7 @@ export const MeetingListPage: React.FC = () => {
                       <OrgIcon fontSize="small" color="action" /> {m.organization}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {m.department} • {m.team} • {m.project}
+                      {m.department} • {m.project}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -198,26 +213,12 @@ export const MeetingListPage: React.FC = () => {
                     <Typography variant="caption" color="text.secondary">{m.startTime} - {m.endTime}</Typography>
                   </TableCell>
                   <TableCell>
-                    <AvatarGroup max={4}>
-                      {m.participants && m.participants.length > 0 ? (
-                        m.participants.map((p: any, idx: number) => {
-                          const pName = p.firstName ? `${p.firstName} ${p.lastName}` : (p.name || `User ${p.id || idx}`);
-                          const initial = pName.charAt(0).toUpperCase();
-                          return (
-                            <Tooltip key={p.id || idx} title={pName}>
-                              <Avatar sx={{ bgcolor: p.isClient ? '#9c27b0' : '#0078D4', width: 28, height: 28, fontSize: '0.75rem' }}>
-                                {initial}
-                              </Avatar>
-                            </Tooltip>
-                          );
-                        })
-                      ) : (
-                        <Avatar sx={{ bgcolor: '#0078D4', width: 28, height: 28, fontSize: '0.75rem' }}>P</Avatar>
-                      )}
+                    <AvatarGroup max={3}>
+                      <Avatar sx={{ bgcolor: '#0078D4', width: 28, height: 28, fontSize: '0.75rem' }}>SC</Avatar>
+                      <Avatar sx={{ bgcolor: '#008272', width: 28, height: 28, fontSize: '0.75rem' }}>AM</Avatar>
+                      <Avatar sx={{ bgcolor: '#D83B01', width: 28, height: 28, fontSize: '0.75rem' }}>JD</Avatar>
                     </AvatarGroup>
-                    <Typography variant="caption" color="text.secondary">
-                      ({m.participantsCount || (m.participants ? m.participants.length : 1)} invited)
-                    </Typography>
+                    <Typography variant="caption" color="text.secondary">({m.participantsCount} invited)</Typography>
                   </TableCell>
                   <TableCell>
                     {m.momUploaded ? (

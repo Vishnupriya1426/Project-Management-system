@@ -51,14 +51,14 @@ export const BacklogPage: React.FC = () => {
       .then((res) => {
         const items: BacklogItem[] = Array.isArray(res.data?.data)
           ? res.data.data.map((b: any) => ({
-              id: b.id,
-              storyCode: b.storyCode ?? b.code ?? `US-${b.id}`,
-              title: b.title ?? '',
-              project: b.project?.title ?? '',
-              priority: b.priority ?? 'MEDIUM',
-              storyPoints: b.storyPoints ?? 0,
-              status: b.status ?? 'UNASSIGNED',
-            }))
+            id: b.id,
+            storyCode: b.storyCode ?? b.code ?? `US-${b.id}`,
+            title: b.title ?? '',
+            project: b.project?.title ?? '',
+            priority: b.priority ?? 'MEDIUM',
+            storyPoints: b.storyPoints ?? 0,
+            status: b.status ?? 'UNASSIGNED',
+          }))
           : [];
         setBacklog(items);
       })
