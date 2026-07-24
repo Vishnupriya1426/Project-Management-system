@@ -226,18 +226,9 @@ export const ClientPortalPage: React.FC = () => {
               color="secondary"
               startIcon={<RequestIcon />}
               onClick={() => setRequestModalOpen(true)}
-              sx={{ mr: 1, fontWeight: 700 }}
-            >
-              Request New Project
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              startIcon={<TicketIcon />}
-              onClick={() => setTicketModalOpen(true)}
               sx={{ fontWeight: 700 }}
             >
-              Raise Ticket
+              Request New Project
             </Button>
           </Grid>
         </Grid>
