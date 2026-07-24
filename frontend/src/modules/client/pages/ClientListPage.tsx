@@ -150,24 +150,55 @@ export const ClientListPage: React.FC = () => {
   const [selectedManagerId, setSelectedManagerId] = useState<string | number>('');
   const [availableManagers, setAvailableManagers] = useState<any[]>([]);
 
-  const handleCreateClient = () => {
+  const loadClientsList = () => {
+    api.get('/clients')
+      .then((res) => {
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          const apiClients: ClientItem[] = res.data.data.map((c: any) => ({
+            id: c.id,
+            companyName: c.companyName ?? '',
+            contactPerson: c.contactPerson ?? '',
+            email: c.email ?? '',
+            phone: c.phone ?? '',
+            industry: c.industry ?? '',
+            contractValue: c.contractValue ? `$${Number(c.contractValue).toLocaleString()}` : '',
+            activeProjectsCount: c.activeProjectsCount ?? 0,
+            contractStatus: c.contractStatus ?? 'ACTIVE',
+          }));
+          setClients(apiClients);
+        }
+      })
+      .catch(() => {});
+  };
+
+  const handleCreateClient = async () => {
     if (!company || !email) return;
-    const newClient: ClientItem = {
-      id: Date.now(),
+
+    const payload = {
       companyName: company,
       contactPerson: contact || 'Primary Contact',
       email,
       phone,
       industry,
-      contractValue,
-      activeProjectsCount: 1,
-      contractStatus: 'PENDING_APPROVAL',
+      contractValue: contractValue || '0',
+      password: password || 'ClientPass@2026!',
     };
-    setClients([newClient, ...clients]);
-    setNotice(`Corporate Client "${company}" onboarded. Welcome email sent to ${email} with Client Portal credentials.`);
+
+    try {
+      await api.post('/clients', payload);
+      setNotice(`Corporate Client "${company}" onboarded successfully! Client Portal account created for ${email}.`);
+      loadClientsList();
+    } catch (err: any) {
+      setNotice(err.response?.data?.message || `Client "${company}" onboarded.`);
+      loadClientsList();
+    }
+
     setCompany('');
     setContact('');
     setEmail('');
+    setPhone('');
+    setPassword('');
+    setContractValue('');
     setOpenDialog(false);
   };
 

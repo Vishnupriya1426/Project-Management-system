@@ -76,7 +76,25 @@ export const ClientPortalPage: React.FC = () => {
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const clientOrgName = (user as any)?.organization || (user as any)?.companyName || 'Corporate Client';
+  const [clientProfile, setClientProfile] = useState<any>(null);
+
+  useEffect(() => {
+    api.get('/clients')
+      .then((res) => {
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          const myClient = res.data.data.find((c: any) => c.email === user?.email || c.user?.email === user?.email);
+          if (myClient) {
+            setClientProfile(myClient);
+          } else if (res.data.data.length > 0) {
+            setClientProfile(res.data.data[0]);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [user]);
+
+  const clientOrgName = clientProfile?.companyName || (user as any)?.organization || (user as any)?.companyName || 'Corporate Client Partner';
+  const contactPersonName = clientProfile?.contactPerson || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Primary Executive Contact';
 
   useEffect(() => {
     api.get('/projects')
@@ -137,7 +155,7 @@ export const ClientPortalPage: React.FC = () => {
         }
       })
       .catch(() => setMeetings([]));
-  }, []);
+  }, [clientOrgName]);
 
   // Derived Metrics
   const totalProjects = projects.length;
@@ -197,7 +215,7 @@ export const ClientPortalPage: React.FC = () => {
                   {clientOrgName}
                 </Typography>
                 <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                  Corporate Client Enterprise Executive Portal • Welcome, <strong>{user?.firstName} {user?.lastName}</strong>
+                  Corporate Client Enterprise Executive Portal • Welcome, <strong>{contactPersonName}</strong>
                 </Typography>
               </Box>
             </Box>

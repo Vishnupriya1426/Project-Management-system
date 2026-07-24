@@ -2,8 +2,8 @@ package com.enterprise.spems.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "clients")
@@ -31,7 +31,25 @@ public class Client {
     @Column(name = "phone", length = 20)
     private String phone;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @Column(name = "industry", length = 100)
+    private String industry;
+
+    @Column(name = "contract_value", precision = 15, scale = 2)
+    private BigDecimal contractValue;
+
+    @Column(name = "contract_status", length = 50)
+    private String contractStatus;
+
+    @Column(name = "domain", length = 100)
+    private String domain;
+
+    @Column(name = "hq_location", length = 150)
+    private String hqLocation;
+
+    @Column(name = "tax_id", length = 50)
+    private String taxId;
+
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 }
