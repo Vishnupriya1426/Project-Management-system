@@ -19,7 +19,6 @@ import {
   CheckCircle as TaskIcon,
   ContactMail as ClientIcon,
   Event as MeetingIcon,
-  CalendarMonth as CalendarIcon,
   BarChart as ReportIcon,
   Security as AuditIcon,
   Settings as SettingsIcon,
@@ -60,7 +59,7 @@ export const Sidebar: React.FC = () => {
     { text: 'Settings & Profile', icon: <SettingsIcon />, path: '/settings' },
   ];
 
-  // Dedicated Project Manager Menu (16 Specific Delivery Modules)
+  // Dedicated Project Manager Menu (15 Specific Delivery Modules)
   const pmMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Projects', icon: <ProjectIcon />, path: '/projects' },
@@ -75,7 +74,6 @@ export const Sidebar: React.FC = () => {
     { text: 'Reports', icon: <ReportIcon />, path: '/reports' },
     { text: 'Clients', icon: <ClientIcon />, path: '/clients' },
     { text: 'Milestones', icon: <MilestoneIcon />, path: '/milestones' },
-    { text: 'Calendar', icon: <CalendarIcon />, path: '/calendar' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
@@ -94,7 +92,6 @@ export const Sidebar: React.FC = () => {
     { text: 'My Projects', icon: <ProjectIcon />, path: '/my-projects', roles: ['ROLE_EMPLOYEE', 'ROLE_TEAM_LEAD'] },
     { text: 'Clients', icon: <ClientIcon />, path: '/clients', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN'] },
     { text: 'Meetings', icon: <MeetingIcon />, path: '/meetings' },
-    { text: 'Calendar', icon: <CalendarIcon />, path: '/calendar' },
     { text: 'Timesheet', icon: <TimesheetIcon />, path: '/timesheet', roles: ['ROLE_EMPLOYEE', 'ROLE_TEAM_LEAD'] },
     { text: 'Daily Work Report', icon: <DailyReportIcon />, path: '/daily-report', roles: ['ROLE_EMPLOYEE', 'ROLE_TEAM_LEAD'] },
     { text: 'Reports', icon: <ReportIcon />, path: '/reports', roles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_HR_MANAGER', 'ROLE_ENG_MANAGER'] },

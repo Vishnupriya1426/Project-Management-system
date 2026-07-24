@@ -29,7 +29,6 @@ import TaskListPage from '../modules/task/pages/TaskListPage';
 import ClientListPage from '../modules/client/pages/ClientListPage';
 import ClientPortalPage from '../modules/client/pages/ClientPortalPage';
 import MeetingListPage from '../modules/meeting/pages/MeetingListPage';
-import CalendarPage from '../modules/meeting/pages/CalendarPage';
 import TimesheetPage from '../modules/timesheet/pages/TimesheetPage';
 import DailyReportPage from '../modules/report/pages/DailyReportPage';
 import NotificationCenterPage from '../modules/notification/pages/NotificationCenterPage';
@@ -97,7 +96,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="clients" element={<ClientListPage />} />
         <Route path="clients/:id" element={<ClientPortalPage />} />
         <Route path="meetings" element={<MeetingListPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
+        <Route path="calendar" element={<Navigate to="/meetings" replace />} />
         <Route path="timesheet" element={<TimesheetPage />} />
         <Route path="daily-report" element={<DailyReportPage />} />
         <Route path="notifications" element={<NotificationCenterPage />} />
