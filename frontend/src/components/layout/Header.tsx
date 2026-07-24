@@ -21,14 +21,8 @@ import {
   ListItemText,
   ListItemIcon,
   ListItemSecondaryAction,
-  Button,
-  Divider,
   Tooltip,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -46,7 +40,6 @@ import {
   Info as SystemIcon,
   DeleteOutline as DeleteIcon,
   Close as CloseIcon,
-  OpenInNew as OpenIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -106,7 +99,6 @@ export const Header: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [fullHistoryDialogOpen, setFullHistoryDialogOpen] = useState<boolean>(false);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -223,11 +215,11 @@ export const Header: React.FC = () => {
   // Get Notification Icon by Type
   const getNotificationIcon = (type: string) => {
     const t = (type || '').toUpperCase();
-    if (t.includes('TASK')) return <TaskIcon color="primary" fontSize="small" />;
-    if (t.includes('MEETING')) return <MeetingIcon color="secondary" fontSize="small" />;
-    if (t.includes('PROJECT')) return <ProjectIcon color="info" fontSize="small" />;
-    if (t.includes('SECURITY') || t.includes('AUTH')) return <SecurityIcon color="warning" fontSize="small" />;
-    return <SystemIcon color="action" fontSize="small" />;
+    if (t.includes('TASK')) return <TaskIcon color="primary" fontSize="medium" />;
+    if (t.includes('MEETING')) return <MeetingIcon color="secondary" fontSize="medium" />;
+    if (t.includes('PROJECT')) return <ProjectIcon color="info" fontSize="medium" />;
+    if (t.includes('SECURITY') || t.includes('AUTH')) return <SecurityIcon color="warning" fontSize="medium" />;
+    return <SystemIcon color="action" fontSize="medium" />;
   };
 
   // Filter notifications by Tab
@@ -378,16 +370,16 @@ export const Header: React.FC = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         PaperProps={{
-          elevation: 12,
+          elevation: 16,
           sx: {
-            width: 420,
-            maxHeight: 560,
-            borderRadius: 3.5,
+            width: 500,
+            maxHeight: 620,
+            borderRadius: 4,
             mt: 1,
             overflow: 'hidden',
             backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.3)',
             transformOrigin: 'top right',
             animation: 'expandFromBell 320ms cubic-bezier(0.34, 1.56, 0.64, 1)',
             '@keyframes expandFromBell': {
@@ -398,18 +390,18 @@ export const Header: React.FC = () => {
         }}
       >
         {/* Popover Header */}
-        <Box sx={{ p: 2, pb: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <NotificationsIcon color="primary" fontSize="small" />
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+        <Box sx={{ p: 2.2, pb: 1.8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+            <NotificationsIcon color="primary" sx={{ fontSize: 26 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.15rem' }}>
               Notifications
             </Typography>
             {unreadCount > 0 && (
-              <Chip label={`${unreadCount} Unread`} color="error" size="small" sx={{ fontWeight: 700, height: 22, fontSize: '0.7rem' }} />
+              <Chip label={`${unreadCount} Unread`} color="error" size="small" sx={{ fontWeight: 800, height: 24, fontSize: '0.75rem', px: 0.5 }} />
             )}
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
             <Tooltip title="Refresh Notifications">
               <IconButton size="small" onClick={fetchNotifications}>
                 <RefreshIcon fontSize="small" />
@@ -437,11 +429,11 @@ export const Header: React.FC = () => {
           variant="scrollable"
           scrollButtons="auto"
           sx={{
-            minHeight: 38,
-            px: 1,
+            minHeight: 42,
+            px: 1.5,
             bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
             borderBottom: '1px solid rgba(0,0,0,0.06)',
-            '& .MuiTab-root': { minHeight: 38, textTransform: 'none', fontWeight: 600, fontSize: '0.78rem', py: 0 },
+            '& .MuiTab-root': { minHeight: 42, textTransform: 'none', fontWeight: 700, fontSize: '0.88rem', py: 0 },
           }}
         >
           <Tab label={`All (${notifications.length})`} />
@@ -452,21 +444,21 @@ export const Header: React.FC = () => {
         </Tabs>
 
         {/* Notification List Body */}
-        <Box sx={{ maxHeight: 380, overflowY: 'auto' }}>
+        <Box sx={{ maxHeight: 480, overflowY: 'auto' }}>
           {loading ? (
             <Box sx={{ p: 4, textAlign: 'center' }}>
-              <CircularProgress size={28} />
-              <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
+              <CircularProgress size={32} />
+              <Typography variant="body2" display="block" sx={{ mt: 1.5, color: 'text.secondary', fontWeight: 600 }}>
                 Loading updates...
               </Typography>
             </Box>
           ) : filteredNotifications.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-              <NotificationsIcon sx={{ fontSize: 44, opacity: 0.3, mb: 1 }} />
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            <Box sx={{ p: 5, textAlign: 'center', color: 'text.secondary' }}>
+              <NotificationsIcon sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
+              <Typography variant="body1" sx={{ fontWeight: 700 }}>
                 No notifications found
               </Typography>
-              <Typography variant="caption">You are all caught up with your activities!</Typography>
+              <Typography variant="body2">You are all caught up with your activities!</Typography>
             </Box>
           ) : (
             <List disablePadding>
@@ -476,9 +468,11 @@ export const Header: React.FC = () => {
                   button
                   onClick={() => handleMarkSingleRead(item.id, item.actionUrl || item.targetUrl)}
                   sx={{
-                    px: 2,
-                    py: 1.5,
-                    borderBottom: '1px solid rgba(0,0,0,0.04)',
+                    px: 2.5,
+                    py: 2,
+                    pr: 7, // Extra padding right to prevent overlap with trash icon & timestamp
+                    position: 'relative',
+                    borderBottom: '1px solid rgba(0,0,0,0.06)',
                     bgcolor: item.isRead ? 'transparent' : mode === 'dark' ? 'rgba(144, 202, 249, 0.08)' : 'rgba(25, 118, 210, 0.04)',
                     transition: 'background-color 0.2s ease',
                     '&:hover': {
@@ -486,42 +480,43 @@ export const Header: React.FC = () => {
                     },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
+                  <ListItemIcon sx={{ minWidth: 46 }}>
+                    <Avatar sx={{ width: 40, height: 40, bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)' }}>
                       {getNotificationIcon(item.type || item.title)}
                     </Avatar>
                   </ListItemIcon>
 
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1, mb: 0.5 }}>
                         <Typography
-                          variant="subtitle2"
+                          variant="subtitle1"
                           sx={{
-                            fontWeight: item.isRead ? 600 : 800,
-                            fontSize: '0.84rem',
+                            fontWeight: item.isRead ? 700 : 800,
+                            fontSize: '0.96rem',
                             color: item.isRead ? 'text.primary' : 'primary.main',
+                            lineHeight: 1.3,
                           }}
                         >
                           {item.title || 'System Notification'}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap', fontSize: '0.7rem' }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 600 }}>
                           {formatTimeAgo(item.createdAt || item.timestamp)}
                         </Typography>
                       </Box>
                     }
                     secondary={
                       <Typography
-                        variant="caption"
+                        variant="body2"
                         sx={{
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
                           color: 'text.secondary',
-                          mt: 0.3,
-                          fontSize: '0.76rem',
-                          lineHeight: 1.3,
+                          fontSize: '0.86rem',
+                          lineHeight: 1.45,
+                          fontWeight: 500,
                         }}
                       >
                         {item.message || item.details || 'New activity logged in your workspace.'}
@@ -529,12 +524,12 @@ export const Header: React.FC = () => {
                     }
                   />
 
-                  <ListItemSecondaryAction>
+                  <ListItemSecondaryAction sx={{ right: 12 }}>
                     {!item.isRead && (
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'primary.main', display: 'inline-block', mr: 1 }} />
+                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'primary.main', display: 'inline-block', mr: 0.8 }} />
                     )}
                     <IconButton size="small" onClick={(e) => handleDeleteNotification(e, item.id)} title="Delete Notification">
-                      <DeleteIcon fontSize="inherit" sx={{ fontSize: 16 }} />
+                      <DeleteIcon fontSize="small" sx={{ fontSize: 18, color: 'text.secondary', '&:hover': { color: 'error.main' } }} />
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
@@ -542,74 +537,7 @@ export const Header: React.FC = () => {
             </List>
           )}
         </Box>
-
-        <Divider />
-
-        {/* Popover Footer */}
-        <Box sx={{ p: 1.5, textAlign: 'center', bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-          <Button
-            size="small"
-            color="primary"
-            startIcon={<OpenIcon fontSize="small" />}
-            onClick={() => {
-              handleBellClose();
-              setFullHistoryDialogOpen(true);
-            }}
-            sx={{ fontWeight: 700, textTransform: 'none', fontSize: '0.8rem' }}
-          >
-            View Full Notification History
-          </Button>
-        </Box>
       </Popover>
-
-      {/* ── Full History Dialog Modal ── */}
-      <Dialog
-        open={fullHistoryDialogOpen}
-        onClose={() => setFullHistoryDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
-      >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <NotificationsIcon color="primary" />
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Full Enterprise Notification Archive
-            </Typography>
-          </Box>
-          <IconButton onClick={() => setFullHistoryDialogOpen(false)}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          <List disablePadding>
-            {notifications.map((item) => (
-              <ListItem key={item.id} divider sx={{ py: 1.5 }}>
-                <ListItemIcon>{getNotificationIcon(item.type || item.title)}</ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                        {item.title}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.createdAt || item.timestamp}
-                      </Typography>
-                    </Box>
-                  }
-                  secondary={item.message || item.details}
-                />
-                <Chip label={item.isRead ? 'READ' : 'UNREAD'} color={item.isRead ? 'default' : 'primary'} size="small" />
-              </ListItem>
-            ))}
-          </List>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button variant="outlined" onClick={() => setFullHistoryDialogOpen(false)}>
-            Close Archive
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };
