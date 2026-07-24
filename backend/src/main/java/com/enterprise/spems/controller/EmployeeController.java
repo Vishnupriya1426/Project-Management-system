@@ -3,7 +3,11 @@ package com.enterprise.spems.controller;
 import com.enterprise.spems.dto.ApiResponse;
 import com.enterprise.spems.dto.request.CreateEmployeeRequest;
 import com.enterprise.spems.dto.response.EmployeeDTO;
+import com.enterprise.spems.model.entity.Employee;
+import com.enterprise.spems.model.entity.User;
 import com.enterprise.spems.model.enums.EmployeeStatus;
+import com.enterprise.spems.repository.EmployeeRepository;
+import com.enterprise.spems.repository.UserRepository;
 import com.enterprise.spems.service.EmployeeService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -14,9 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/employees")
@@ -24,6 +30,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class EmployeeController {
 
     private final EmployeeService employeeService;
+    private final EmployeeRepository employeeRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<EmployeeDTO>>> getAllEmployees(
@@ -67,6 +76,29 @@ public class EmployeeController {
 
         EmployeeDTO updated = employeeService.updateEmployee(id, employeeDTO);
         return ResponseEntity.ok(ApiResponse.success(updated, "Employee updated successfully", request.getRequestURI()));
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<ApiResponse<String>> resetEmployeePassword(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload,
+            HttpServletRequest request) {
+
+        String newPassword = payload.get("password");
+        if (newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Password is required", request.getRequestURI()));
+        }
+
+        Employee employee = employeeRepository.findById(id).orElse(null);
+        if (employee == null || employee.getUser() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Employee user account not found", request.getRequestURI()));
+        }
+
+        User user = employee.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(ApiResponse.success("Password updated successfully for " + user.getEmail(), "Password reset successfully", request.getRequestURI()));
     }
 
     @PostMapping("/{id}/avatar")

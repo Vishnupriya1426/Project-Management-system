@@ -22,6 +22,10 @@ import {
   Tab,
   Stack,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -86,10 +90,55 @@ export const EmployeeListPage: React.FC = () => {
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferringEmp, setTransferringEmp] = useState<Employee | null>(null);
 
+  // Reset Password Modal
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [resettingEmp, setResettingEmp] = useState<Employee | null>(null);
+  const [newPassword, setNewPassword] = useState('Password123');
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [organizations, setOrganizations] = useState<any[]>([]);
 
+  const loadEmployees = () => {
+    api.get('/employees?size=100')
+      .then((res) => {
+        const raw = res.data?.data?.content || res.data?.data;
+        if (Array.isArray(raw)) {
+          const mapped: Employee[] = raw.map((e: any) => {
+            const firstName = e.firstName || 'Employee';
+            const lastName = e.lastName || '';
+            const fullName = `${firstName} ${lastName}`.trim();
+            const avatarInitial = firstName.charAt(0).toUpperCase();
+
+            return {
+              id: e.id,
+              empId: e.employeeCode || `EMP-2026-${1000 + e.id}`,
+              name: fullName,
+              email: e.user?.email || `${firstName.toLowerCase()}@spems.com`,
+              phone: e.phone || '+1 (555) 019-2834',
+              organization: e.organization || 'SPEMS Enterprise HQ',
+              department: e.department?.name || 'Engineering',
+              role: e.user?.role?.name || 'ROLE_EMPLOYEE',
+              designation: e.designation || 'Software Engineer',
+              manager: e.reportingManager ? `${e.reportingManager.firstName} ${e.reportingManager.lastName}` : 'Executive Lead',
+              projectsCount: 2,
+              tasksCount: 5,
+              status: e.status || 'ACTIVE',
+              joiningDate: e.hireDate || '2026-01-15',
+              avatar: avatarInitial,
+              primarySkill: e.designation || 'Full Stack',
+            };
+          });
+          setEmployees(mapped);
+        } else {
+          setEmployees([]);
+        }
+      })
+      .catch(() => setEmployees([]));
+  };
+
   useEffect(() => {
+    loadEmployees();
+
     api.get('/clients')
       .then((res) => {
         if (res.data?.data && Array.isArray(res.data.data)) {
@@ -97,47 +146,6 @@ export const EmployeeListPage: React.FC = () => {
         }
       })
       .catch(() => setOrganizations([]));
-  }, []);
-
-  const loadEmployees = () => {
-    api.get('/employees')
-      .then((res) => {
-        const rawData = res.data?.data;
-        const empList = Array.isArray(rawData)
-          ? rawData
-          : (rawData?.content && Array.isArray(rawData.content) ? rawData.content : []);
-
-        if (empList.length > 0) {
-          const apiEmployees: Employee[] = empList.map((e: any) => ({
-            id: e.id,
-            empId: e.employeeCode || `EMP-2026-00${e.id}`,
-            name: (e.firstName || e.lastName) ? `${e.firstName || ''} ${e.lastName || ''}`.trim() : (e.name || 'Employee'),
-            email: e.email || e.user?.email || `${(e.firstName || 'emp').toLowerCase()}@spems.com`,
-            phone: e.phone || '+1 555-0192',
-            organization: e.organization || (e.client ? e.client.companyName : null) || 'SPEMS Enterprise HQ',
-            department: e.departmentName || (e.department ? e.department.name : 'Engineering'),
-            role: e.role || (e.user ? e.user.role : 'ROLE_EMPLOYEE'),
-            designation: e.designation || 'Software Engineer',
-            manager: e.manager || 'Sarah Connor',
-            projectsCount: e.projectsCount || 3,
-            tasksCount: e.tasksCount || 8,
-            status: e.status || 'ACTIVE',
-            joiningDate: e.joiningDate || e.hireDate || '2024-05-12',
-            avatar: e.avatarUrl ? `/api/v1${e.avatarUrl}` : ((e.firstName && e.firstName[0]) ? e.firstName[0] : (e.name ? e.name[0] : 'E')),
-            primarySkill: e.primarySkill || 'Java / Spring / React',
-          }));
-          setEmployees(apiEmployees);
-        } else {
-          setEmployees([]);
-        }
-      })
-      .catch(() => {
-        setEmployees([]);
-      });
-  };
-
-  useEffect(() => {
-    loadEmployees();
   }, []);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, emp: Employee) => {
@@ -174,46 +182,52 @@ export const EmployeeListPage: React.FC = () => {
     handleMenuClose();
   };
 
-  const handleToggleStatus = async (emp: Employee) => {
-    const newStatus = emp.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    setEmployees(employees.map((e) => (e.id === emp.id ? { ...e, status: newStatus } : e)));
-    setNotice(`Employee ${emp.name} account status updated to ${newStatus} in database.`);
+  const handleOpenResetPassword = (emp: Employee) => {
+    setResettingEmp(emp);
+    setNewPassword('Password123');
+    setResetPasswordOpen(true);
     handleMenuClose();
   };
 
-  const handleDeleteEmployee = async (emp: Employee) => {
+  const handleResetPasswordSubmit = async () => {
+    if (!resettingEmp || !newPassword) return;
     try {
-      await api.delete(`/employees/${emp.id}`);
-    } catch (err) {}
-    setEmployees(employees.filter((e) => e.id !== emp.id));
-    setNotice(`Employee ${emp.name} deleted from database.`);
+      await api.put(`/employees/${resettingEmp.id}/password`, { password: newPassword });
+      setNotice(`Password reset successfully for ${resettingEmp.name}! Email: ${resettingEmp.email} | New Password: ${newPassword}`);
+      setResetPasswordOpen(false);
+    } catch (err: any) {
+      setNotice(err.response?.data?.message || 'Failed to reset employee password.');
+    }
+  };
+
+  const handleToggleStatus = (emp: Employee) => {
+    const newStatus = emp.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    api.put(`/employees/${emp.id}`, { status: newStatus })
+      .then(() => {
+        setNotice(`Employee ${emp.name} account status updated to ${newStatus}.`);
+        loadEmployees();
+      })
+      .catch(() => setNotice('Failed to update status.'));
     handleMenuClose();
   };
 
-  const handleEmployeeCreated = (empData: any) => {
+  const handleDeleteEmployee = (emp: Employee) => {
+    api.delete(`/employees/${emp.id}`)
+      .then(() => {
+        setNotice(`Employee ${emp.name} deleted successfully.`);
+        loadEmployees();
+      })
+      .catch(() => setNotice('Failed to delete employee.'));
+    handleMenuClose();
+  };
+
+  const handleEmployeeCreated = (newEmpData: any) => {
+    setNotice(`Employee ${newEmpData.firstName} ${newEmpData.lastName} created successfully! Database & Audit Log updated.`);
     loadEmployees();
-    setNotice(`Employee ${empData.firstName || 'New Staff'} hired successfully! Registered in system.`);
   };
 
   const handleEmployeeUpdated = (updatedEmp: any) => {
-    setEmployees(employees.map((e) => (e.id === updatedEmp.id ? updatedEmp : e)));
     setNotice(`Employee ${updatedEmp.name} profile updated in database successfully!`);
-    loadEmployees();
-  };
-
-  const handleProjectAssigned = (assignmentData: any) => {
-    setNotice(`Project "${assignmentData.projectName || 'Active Project'}" assigned to ${assignmentData.employeeName || 'Employee'}. Updated in Resource Allocation, Employee Portal, PM Dashboard, Reports & Audit Log!`);
-    if (assigningEmp) {
-      setEmployees(employees.map((e) => (e.id === assigningEmp.id ? { ...e, projectsCount: (e.projectsCount || 0) + 1 } : e)));
-    }
-    loadEmployees();
-  };
-
-  const handleEmployeeTransferred = (transferData: any) => {
-    setNotice(`Employee ${transferData.employeeName} transferred from ${transferData.currentDepartment} to ${transferData.newDepartment} under manager ${transferData.newManager}. Automatically updated old/new department counts, team membership, reporting manager, projects, resource allocation, dashboards, reports, and audit log!`);
-    if (transferringEmp) {
-      setEmployees(employees.map((e) => (e.id === transferringEmp.id ? { ...e, department: transferData.newDepartment, manager: transferData.newManager } : e)));
-    }
     loadEmployees();
   };
 
@@ -257,7 +271,7 @@ export const EmployeeListPage: React.FC = () => {
       </Box>
 
       {notice && (
-        <Alert severity="info" onClose={() => setNotice(null)} sx={{ mb: 3, fontWeight: 600 }}>
+        <Alert severity="success" onClose={() => setNotice(null)} sx={{ mb: 3, fontWeight: 600 }}>
           {notice}
         </Alert>
       )}
@@ -303,10 +317,9 @@ export const EmployeeListPage: React.FC = () => {
             >
               <MenuItem value="ALL">All Departments</MenuItem>
               <MenuItem value="Engineering">Engineering</MenuItem>
-              <MenuItem value="DevOps & Cloud">DevOps & Cloud</MenuItem>
-              <MenuItem value="Product">Product</MenuItem>
-              <MenuItem value="QA & Testing">QA & Testing</MenuItem>
-              <MenuItem value="HR & Ops">HR & Ops</MenuItem>
+              <MenuItem value="Product">Product Management</MenuItem>
+              <MenuItem value="Quality Assurance">Quality Assurance</MenuItem>
+              <MenuItem value="Human Resources">Human Resources</MenuItem>
             </TextField>
           </Grid>
           <Grid item xs={6} sm={3}>
@@ -320,24 +333,23 @@ export const EmployeeListPage: React.FC = () => {
             >
               <MenuItem value="ALL">All Statuses</MenuItem>
               <MenuItem value="ACTIVE">ACTIVE</MenuItem>
-              <MenuItem value="ON_LEAVE">ON_LEAVE</MenuItem>
               <MenuItem value="INACTIVE">INACTIVE</MenuItem>
+              <MenuItem value="ON_LEAVE">ON LEAVE</MenuItem>
             </TextField>
           </Grid>
         </Grid>
       </Paper>
 
-      <Paper elevation={2} sx={{ borderRadius: 2 }}>
+      {/* Employees Table */}
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: 'action.hover' }}>
-                <TableCell sx={{ fontWeight: 700 }}>Photo</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Employee ID</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Name & Email</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Employee ID & Name</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Organization</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Role Persona</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Role</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Designation</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Manager</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
@@ -348,15 +360,23 @@ export const EmployeeListPage: React.FC = () => {
               {filteredEmployees.map((emp) => (
                 <TableRow key={emp.id} hover>
                   <TableCell>
-                    <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 700 }}>{emp.avatar}</Avatar>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 700 }}>{emp.avatar}</Avatar>
+                      <Box>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', display: 'block' }}>
+                          {emp.empId}
+                        </Typography>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                          {emp.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {emp.email}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>{emp.empId}</TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{emp.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">{emp.email}</Typography>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 600 }}>
                       <OrgIcon fontSize="small" color="primary" />
                       {emp.organization}
                     </Box>
@@ -386,6 +406,7 @@ export const EmployeeListPage: React.FC = () => {
         </TableContainer>
       </Paper>
 
+      {/* ACTION MENU */}
       <Menu
         anchorEl={menuAnchorEl}
         open={Boolean(menuAnchorEl)}
@@ -405,7 +426,7 @@ export const EmployeeListPage: React.FC = () => {
         <MenuItem onClick={() => activeMenuEmp && handleOpenTransferModal(activeMenuEmp)}>
           <OrgIcon sx={{ mr: 1 }} /> Transfer Department
         </MenuItem>
-        <MenuItem onClick={() => { setNotice(`Password reset link dispatched to ${activeMenuEmp?.email}`); handleMenuClose(); }}>
+        <MenuItem onClick={() => activeMenuEmp && handleOpenResetPassword(activeMenuEmp)}>
           <LockResetIcon sx={{ mr: 1 }} /> Reset Password
         </MenuItem>
         <MenuItem onClick={() => activeMenuEmp && handleToggleStatus(activeMenuEmp)}>
@@ -416,6 +437,31 @@ export const EmployeeListPage: React.FC = () => {
         </MenuItem>
       </Menu>
 
+      {/* RESET PASSWORD DIALOG */}
+      <Dialog open={resetPasswordOpen} onClose={() => setResetPasswordOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>🔑 Reset Employee Password</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>
+            {resettingEmp?.name} ({resettingEmp?.email})
+          </Typography>
+          <TextField
+            fullWidth
+            type="password"
+            label="New Password *"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setResetPasswordOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="primary" onClick={handleResetPasswordSubmit} sx={{ fontWeight: 700 }}>
+            Update Password
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* DRAWER FOR EMPLOYEE DETAILS */}
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)} PaperProps={{ sx: { width: { xs: '100%', md: 650 }, p: 3 } }}>
         {selectedEmp && (
           <Box>
@@ -445,45 +491,43 @@ export const EmployeeListPage: React.FC = () => {
                 </Grid>
               </Box>
             )}
-
-            {activeTab > 0 && (
-              <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Tab View: {tabLabels[activeTab]}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Detailed enterprise section for <strong>{selectedEmp.name}</strong> ({tabLabels[activeTab]} record set).
-                </Typography>
-              </Box>
-            )}
           </Box>
         )}
       </Drawer>
 
+      {/* WIZARDS */}
       <AddEmployeeWizardModal
         open={wizardOpen}
         onClose={() => setWizardOpen(false)}
         onSuccess={handleEmployeeCreated}
       />
 
-      <EditEmployeeWizardModal
-        open={editWizardOpen}
-        employee={editingEmp}
-        onClose={() => setEditWizardOpen(false)}
-        onSuccess={handleEmployeeUpdated}
-      />
+      {editingEmp && (
+        <EditEmployeeWizardModal
+          open={editWizardOpen}
+          onClose={() => setEditWizardOpen(false)}
+          employee={editingEmp}
+          onSuccess={handleEmployeeUpdated}
+        />
+      )}
 
-      <AssignProjectDialogModal
-        open={assignDialogOpen}
-        employee={assigningEmp}
-        onClose={() => setAssignDialogOpen(false)}
-        onSuccess={handleProjectAssigned}
-      />
+      {assigningEmp && (
+        <AssignProjectDialogModal
+          open={assignDialogOpen}
+          onClose={() => setAssignDialogOpen(false)}
+          employee={assigningEmp}
+          onSuccess={() => loadEmployees()}
+        />
+      )}
 
-      <TransferDepartmentModal
-        open={transferModalOpen}
-        employee={transferringEmp}
-        onClose={() => setTransferModalOpen(false)}
-        onSuccess={handleEmployeeTransferred}
-      />
+      {transferringEmp && (
+        <TransferDepartmentModal
+          open={transferModalOpen}
+          onClose={() => setTransferModalOpen(false)}
+          employee={transferringEmp}
+          onSuccess={() => loadEmployees()}
+        />
+      )}
     </Box>
   );
 };
