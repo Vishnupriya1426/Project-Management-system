@@ -19,9 +19,9 @@ import {
   Add as AddIcon,
   PlayArrow as StartIcon,
   CheckCircle as CloseIcon,
-  Assessment as ReviewIcon,
 } from '@mui/icons-material';
 import api from '../../../config/axios.config';
+import { CreateSprintModal } from '../components/CreateSprintModal';
 
 interface Sprint {
   id: number;
@@ -38,10 +38,10 @@ interface Sprint {
 
 export const SprintListPage: React.FC = () => {
   const [notice, setNotice] = useState<string | null>(null);
-
+  const [openModal, setOpenModal] = useState(false);
   const [sprints, setSprints] = useState<Sprint[]>([]);
 
-  useEffect(() => {
+  const fetchSprints = () => {
     api.get('/sprints')
       .then((res) => {
         const apiSprints: Sprint[] = Array.isArray(res.data?.data)
@@ -63,7 +63,32 @@ export const SprintListPage: React.FC = () => {
       .catch(() => {
         setSprints([]);
       });
+  };
+
+  useEffect(() => {
+    fetchSprints();
   }, []);
+
+  const handleUpdateStatus = async (id: number, newStatus: string) => {
+    try {
+      await api.put(`/sprints/${id}/status`, { status: newStatus });
+      setNotice(`Sprint status changed to ${newStatus}! Database & velocity board updated.`);
+      fetchSprints();
+    } catch {
+      setNotice('Failed to update sprint status.');
+    }
+  };
+
+  const handleIncrementPoints = async (s: Sprint) => {
+    const newPts = Math.min(s.completedPoints + 10, s.storyPoints || 40);
+    try {
+      await api.put(`/sprints/${s.id}/status`, { completedPoints: newPts });
+      setNotice(`Completed +10 Story Points in "${s.sprintName}"! Velocity & Burndown updated.`);
+      fetchSprints();
+    } catch {
+      setNotice('Failed to update story points.');
+    }
+  };
 
   return (
     <Box>
@@ -78,23 +103,14 @@ export const SprintListPage: React.FC = () => {
         </Box>
 
         <Stack direction="row" spacing={1} flexWrap="wrap">
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setNotice('Sprint creation modal opened.')}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenModal(true)}>
             + Create Sprint
-          </Button>
-          <Button variant="outlined" color="success" startIcon={<StartIcon />} onClick={() => setNotice('Sprint 14 activated!')}>
-            Start Sprint
-          </Button>
-          <Button variant="outlined" color="warning" startIcon={<CloseIcon />} onClick={() => setNotice('Sprint closed & retrospective report generated.')}>
-            Close Sprint
-          </Button>
-          <Button variant="outlined" startIcon={<ReviewIcon />} onClick={() => setNotice('Sprint Velocity Review Report exported.')}>
-            Review Sprint
           </Button>
         </Stack>
       </Box>
 
       {notice && (
-        <Alert severity="info" onClose={() => setNotice(null)} sx={{ mb: 3, fontWeight: 600 }}>
+        <Alert severity="success" onClose={() => setNotice(null)} sx={{ mb: 3, fontWeight: 600 }}>
           {notice}
         </Alert>
       )}
@@ -113,6 +129,7 @@ export const SprintListPage: React.FC = () => {
                 <TableCell sx={{ fontWeight: 700 }}>Story Points</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Burned %</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -141,6 +158,42 @@ export const SprintListPage: React.FC = () => {
                         color={s.status === 'ACTIVE' ? 'primary' : s.status === 'CLOSED' ? 'success' : 'default'}
                       />
                     </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5}>
+                        {s.status === 'PLANNING' && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="success"
+                            startIcon={<StartIcon />}
+                            onClick={() => handleUpdateStatus(s.id, 'ACTIVE')}
+                          >
+                            Start
+                          </Button>
+                        )}
+                        {s.status === 'ACTIVE' && (
+                          <>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                              onClick={() => handleIncrementPoints(s)}
+                            >
+                              +10 Pts
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="warning"
+                              startIcon={<CloseIcon />}
+                              onClick={() => handleUpdateStatus(s.id, 'CLOSED')}
+                            >
+                              Close
+                            </Button>
+                          </>
+                        )}
+                      </Stack>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -148,6 +201,17 @@ export const SprintListPage: React.FC = () => {
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* CREATE SPRINT MODAL */}
+      <CreateSprintModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        onSuccess={(msg: string) => {
+          setNotice(msg);
+          setOpenModal(false);
+          fetchSprints();
+        }}
+      />
     </Box>
   );
 };
