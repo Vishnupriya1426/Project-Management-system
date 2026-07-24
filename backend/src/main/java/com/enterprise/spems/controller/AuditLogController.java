@@ -3,6 +3,8 @@ package com.enterprise.spems.controller;
 import com.enterprise.spems.dto.ApiResponse;
 import com.enterprise.spems.model.entity.AuditLog;
 import com.enterprise.spems.repository.AuditLogRepository;
+import com.enterprise.spems.service.AuditLogService;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,25 @@ import java.util.stream.Collectors;
 public class AuditLogController {
 
     private final AuditLogRepository auditLogRepository;
+    private final AuditLogService auditLogService;
+
+    @PostConstruct
+    public void initAdminAuditLog() {
+        if (auditLogRepository.count() == 0) {
+            auditLogService.logEvent(
+                    null,
+                    "admin@spems.com",
+                    "ROLE_SUPER_ADMIN",
+                    "Security",
+                    "System Audit Initialized",
+                    "System",
+                    1L,
+                    "127.0.0.1",
+                    "SUCCESS",
+                    "Centralized Enterprise Audit System initialized for Super Admin (admin@spems.com)."
+            );
+        }
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllAuditLogs(
