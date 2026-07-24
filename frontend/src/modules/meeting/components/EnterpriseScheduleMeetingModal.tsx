@@ -92,8 +92,24 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
   }, [open]);
 
   const handleSubmit = async () => {
-    if (!title || !meetingDate || !startTime) {
-      setErrorMsg('Please enter a Meeting Title, Date, and Start Time.');
+    if (!title || !title.trim()) {
+      setErrorMsg('Meeting Title is required.');
+      return;
+    }
+    if (!meetingDate) {
+      setErrorMsg('Meeting Date is required.');
+      return;
+    }
+    if (!startTime) {
+      setErrorMsg('Start Time is required.');
+      return;
+    }
+    if (endTime && endTime <= startTime) {
+      setErrorMsg('End Time must be after Start Time.');
+      return;
+    }
+    if (meetingUrl && !/^https?:\/\/.+/.test(meetingUrl.trim())) {
+      setErrorMsg('Meeting URL must start with http:// or https://');
       return;
     }
 

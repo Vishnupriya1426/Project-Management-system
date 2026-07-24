@@ -15,13 +15,18 @@ export const ChangePasswordPage: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [success, setSuccess] = useState(false);
+  const [currentPwdError, setCurrentPwdError] = useState('');
+  const [newPwdError, setNewPwdError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentPwdError('');
+    setNewPwdError('');
+    if (!currentPassword) { setCurrentPwdError('Current password is required'); return; }
+    if (!newPassword) { setNewPwdError('New password is required'); return; }
+    if (newPassword.length < 6) { setNewPwdError('Password must be at least 6 characters long'); return; }
     setSuccess(true);
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1500);
+    setTimeout(() => { navigate('/dashboard'); }, 1500);
   };
 
   return (
@@ -47,7 +52,7 @@ export const ChangePasswordPage: React.FC = () => {
 
           {success && <Alert severity="success" sx={{ mb: 2 }}>Password updated! Returning to dashboard...</Alert>}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <TextField
               fullWidth
               label="Current Password"
@@ -55,7 +60,9 @@ export const ChangePasswordPage: React.FC = () => {
               variant="outlined"
               margin="normal"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
+              onChange={(e) => { setCurrentPassword(e.target.value); setCurrentPwdError(''); }}
+              error={Boolean(currentPwdError)}
+              helperText={currentPwdError}
               required
             />
             <TextField
@@ -65,7 +72,9 @@ export const ChangePasswordPage: React.FC = () => {
               variant="outlined"
               margin="normal"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e) => { setNewPassword(e.target.value); setNewPwdError(''); }}
+              error={Boolean(newPwdError)}
+              helperText={newPwdError}
               required
             />
             <Button

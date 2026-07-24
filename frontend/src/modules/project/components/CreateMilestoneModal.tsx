@@ -56,8 +56,12 @@ export const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({
   }, [open]);
 
   const handleSubmit = async () => {
-    if (!milestoneName || !projectId) {
-      setErrorMsg('Please enter a milestone name and select a project.');
+    if (!milestoneName || !milestoneName.trim()) {
+      setErrorMsg('Milestone Name is required.');
+      return;
+    }
+    if (!projectId) {
+      setErrorMsg('Please select a Project.');
       return;
     }
 

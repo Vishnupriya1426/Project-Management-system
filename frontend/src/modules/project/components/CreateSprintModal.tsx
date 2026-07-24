@@ -60,8 +60,16 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
   }, [open]);
 
   const handleSubmit = async () => {
-    if (!sprintName || !projectId) {
-      setErrorMsg('Please enter a sprint name and select a project.');
+    if (!sprintName || !sprintName.trim()) {
+      setErrorMsg('Sprint Name is required.');
+      return;
+    }
+    if (!projectId) {
+      setErrorMsg('Please select a Project.');
+      return;
+    }
+    if (endDate && startDate && endDate < startDate) {
+      setErrorMsg('Sprint End Date must be on or after the Start Date.');
       return;
     }
 

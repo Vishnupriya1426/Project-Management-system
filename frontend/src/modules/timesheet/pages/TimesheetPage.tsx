@@ -44,6 +44,7 @@ export const TimesheetPage: React.FC = () => {
   const [project, setProject] = useState('Enterprise Cloud Migration');
   const [task, setTask] = useState('PRJ-001-T01: OAuth2 JWT Token Implementation');
   const [hours, setHours] = useState('8');
+  const [hoursError, setHoursError] = useState('');
 
   const [entries, setEntries] = useState<TimesheetEntry[]>([]);
 
@@ -76,12 +77,17 @@ export const TimesheetPage: React.FC = () => {
   }, []);
 
   const handleAddEntry = () => {
+    setHoursError('');
+    const parsedHours = parseFloat(hours);
+    if (!hours || isNaN(parsedHours)) { setHoursError('Hours logged is required'); return; }
+    if (parsedHours < 0.5 || parsedHours > 24) { setHoursError('Hours must be between 0.5 and 24'); return; }
+    if (!project || !project.trim()) { setNotice('Please enter a project name.'); return; }
     const newEntry: TimesheetEntry = {
       id: Date.now(),
       date,
       project,
       task,
-      hours: parseFloat(hours) || 8,
+      hours: parsedHours,
       status: 'DRAFT',
     };
     setEntries([newEntry, ...entries]);
@@ -180,7 +186,16 @@ export const TimesheetPage: React.FC = () => {
               <MenuItem value="Healthcare Patient Portal">Healthcare Patient Portal</MenuItem>
             </TextField>
             <TextField label="Task Description" value={task} onChange={(ev) => setTask(ev.target.value)} fullWidth />
-            <TextField type="number" label="Hours Worked" value={hours} onChange={(ev) => setHours(ev.target.value)} fullWidth />
+            <TextField
+              type="number"
+              label="Hours Worked"
+              value={hours}
+              onChange={(ev) => { setHours(ev.target.value); setHoursError(''); }}
+              error={Boolean(hoursError)}
+              helperText={hoursError || 'Enter hours between 0.5 and 24'}
+              inputProps={{ min: 0.5, max: 24, step: 0.5 }}
+              fullWidth
+            />
           </Box>
         </DialogContent>
         <DialogActions>

@@ -79,6 +79,7 @@ export const ClientListPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [industry, setIndustry] = useState('Banking & Financial Technology');
   const [contractValue, setContractValue] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [clients, setClients] = useState<ClientItem[]>([]);
 
@@ -172,7 +173,17 @@ export const ClientListPage: React.FC = () => {
   };
 
   const handleCreateClient = async () => {
-    if (!company || !email) return;
+    const errs: Record<string, string> = {};
+    if (!company || !company.trim()) errs.company = 'Company Name is required';
+    if (!email || !email.trim()) {
+      errs.email = 'Corporate Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errs.email = 'Please enter a valid email address';
+    }
+    if (!password || password.length < 6) errs.password = 'Password must be at least 6 characters';
+    if (contractValue && isNaN(Number(contractValue))) errs.contractValue = 'Contract Value must be a number';
+    if (Object.keys(errs).length > 0) { setFormErrors(errs); return; }
+    setFormErrors({});
 
     const payload = {
       companyName: company,
@@ -615,13 +626,30 @@ export const ClientListPage: React.FC = () => {
 
           <Grid container spacing={2} sx={{ pt: 1 }}>
             <Grid item xs={12} sm={6}>
-              <TextField label="Company Name" value={company} onChange={(e) => setCompany(e.target.value)} required fullWidth />
+              <TextField
+                label="Company Name"
+                value={company}
+                onChange={(e) => { setCompany(e.target.value); setFormErrors((prev) => ({ ...prev, company: '' })); }}
+                error={Boolean(formErrors.company)}
+                helperText={formErrors.company}
+                required
+                fullWidth
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField label="Primary Contact Person Name" value={contact} onChange={(e) => setContact(e.target.value)} required fullWidth />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField type="email" label="Corporate Work Email" value={email} onChange={(e) => setEmail(e.target.value)} required fullWidth />
+              <TextField
+                type="email"
+                label="Corporate Work Email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setFormErrors((prev) => ({ ...prev, email: '' })); }}
+                error={Boolean(formErrors.email)}
+                helperText={formErrors.email}
+                required
+                fullWidth
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField label="Contact Phone" value={phone} onChange={(e) => setPhone(e.target.value)} fullWidth />
@@ -641,13 +669,22 @@ export const ClientListPage: React.FC = () => {
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField label="Agreed Contract Value ($)" value={contractValue} onChange={(e) => setContractValue(e.target.value)} fullWidth />
+              <TextField
+                label="Agreed Contract Value ($)"
+                value={contractValue}
+                onChange={(e) => { setContractValue(e.target.value); setFormErrors((prev) => ({ ...prev, contractValue: '' })); }}
+                error={Boolean(formErrors.contractValue)}
+                helperText={formErrors.contractValue}
+                fullWidth
+              />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 label="Client Portal Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setFormErrors((prev) => ({ ...prev, password: '' })); }}
+                error={Boolean(formErrors.password)}
+                helperText={formErrors.password || 'Minimum 6 characters'}
                 fullWidth
                 InputProps={{
                   startAdornment: <InputAdornment position="start"><PasswordIcon color="primary" /></InputAdornment>,

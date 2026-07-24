@@ -15,17 +15,19 @@ export const ResetPasswordPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmError, setConfirmError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
+    setPasswordError('');
+    setConfirmError('');
+    if (!newPassword) { setPasswordError('New password is required'); return; }
+    if (newPassword.length < 6) { setPasswordError('Password must be at least 6 characters long'); return; }
+    if (!confirmPassword) { setConfirmError('Please confirm your new password'); return; }
+    if (newPassword !== confirmPassword) { setConfirmError('Passwords do not match'); return; }
     setMessage('Your password has been successfully reset! Redirecting to login...');
-    setTimeout(() => {
-      navigate('/login');
-    }, 2000);
+    setTimeout(() => { navigate('/login'); }, 2000);
   };
 
   return (
@@ -51,7 +53,7 @@ export const ResetPasswordPage: React.FC = () => {
 
           {message && <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <TextField
               fullWidth
               label="New Password"
@@ -59,7 +61,9 @@ export const ResetPasswordPage: React.FC = () => {
               variant="outlined"
               margin="normal"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
+              error={Boolean(passwordError)}
+              helperText={passwordError}
               required
             />
             <TextField
@@ -69,7 +73,9 @@ export const ResetPasswordPage: React.FC = () => {
               variant="outlined"
               margin="normal"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => { setConfirmPassword(e.target.value); setConfirmError(''); }}
+              error={Boolean(confirmError)}
+              helperText={confirmError}
               required
             />
             <Button

@@ -31,10 +31,15 @@ export const RaiseSupportTicketModal: React.FC<RaiseSupportTicketModalProps> = (
   const [issueType, setIssueType] = useState('Bug / Defect');
   const [description, setDescription] = useState('');
   const [success, setSuccess] = useState(false);
+  const [titleError, setTitleError] = useState('');
+  const [descError, setDescError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ticketTitle || !description) return;
+    setTitleError('');
+    setDescError('');
+    if (!ticketTitle || !ticketTitle.trim()) { setTitleError('Ticket title/summary is required'); return; }
+    if (!description || description.trim().length < 10) { setDescError('Description must be at least 10 characters'); return; }
 
     const selectedProj = projects.find((p) => p.id === selectedProjectId) || projects[0];
 
@@ -80,8 +85,10 @@ export const RaiseSupportTicketModal: React.FC<RaiseSupportTicketModalProps> = (
                 fullWidth
                 label="Ticket / Issue Summary *"
                 value={ticketTitle}
-                onChange={(e) => setTicketTitle(e.target.value)}
+                onChange={(e) => { setTicketTitle(e.target.value); setTitleError(''); }}
                 placeholder="e.g. UAT Login Timeout Error on Mobile Auth Service"
+                error={Boolean(titleError)}
+                helperText={titleError}
                 required
               />
             </Grid>
@@ -139,8 +146,10 @@ export const RaiseSupportTicketModal: React.FC<RaiseSupportTicketModalProps> = (
                 rows={4}
                 label="Detailed Description & Reproduction Steps *"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => { setDescription(e.target.value); setDescError(''); }}
                 placeholder="Describe what happened, expected behavior, steps to reproduce..."
+                error={Boolean(descError)}
+                helperText={descError}
                 required
               />
             </Grid>
