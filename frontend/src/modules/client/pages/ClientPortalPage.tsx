@@ -340,68 +340,83 @@ export const ClientPortalPage: React.FC = () => {
 
       {/* TAB 1: Projects & Live Progress Tracker */}
       <CustomTabPanel value={tabIndex} index={1}>
-        <Grid container spacing={3}>
-          {projects.map((proj) => (
-            <Grid item xs={12} key={proj.id}>
-              <Paper elevation={3} sx={{ p: 3, borderRadius: 3, borderLeft: '6px solid #0078D4' }}>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} md={8}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                        {proj.name}
-                      </Typography>
-                      <Chip label={proj.code} variant="outlined" size="small" sx={{ fontWeight: 700 }} />
-                      {getHealthBadge(proj.health)}
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      {proj.summary}
-                    </Typography>
-
-                    {/* Stage Stepper */}
-                    <Box sx={{ mt: 2 }}>
-                      <Stepper activeStep={proj.activeStage} alternativeLabel>
-                        {proj.stages.map((label: string) => (
-                          <Step key={label}>
-                            <StepLabel>{label}</StepLabel>
-                          </Step>
-                        ))}
-                      </Stepper>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <Paper elevation={1} sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <LeadIcon color="primary" fontSize="small" /> SPEMS Project Lead
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                        {proj.leadName} ({proj.leadRole})
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                        <EmailIcon fontSize="inherit" /> {proj.leadEmail}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <PhoneIcon fontSize="inherit" /> {proj.leadPhone}
-                      </Typography>
-
-                      <Divider sx={{ my: 1.5 }} />
-
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                          Progress
+        {projects.length > 0 ? (
+          <Grid container spacing={3}>
+            {projects.map((proj) => (
+              <Grid item xs={12} key={proj.id}>
+                <Paper elevation={3} sx={{ p: 3, borderRadius: 3, borderLeft: '6px solid #0078D4' }}>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={8}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main' }}>
+                          {proj.name}
                         </Typography>
-                        <Typography variant="caption" sx={{ fontWeight: 800 }}>
-                          {proj.completionPercentage}%
-                        </Typography>
+                        <Chip label={proj.code} variant="outlined" size="small" sx={{ fontWeight: 700 }} />
+                        {getHealthBadge(proj.health)}
                       </Box>
-                      <LinearProgress variant="determinate" value={proj.completionPercentage} sx={{ height: 8, borderRadius: 4 }} />
-                    </Paper>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        {proj.summary}
+                      </Typography>
+
+                      {/* Stage Stepper */}
+                      <Box sx={{ mt: 2 }}>
+                        <Stepper activeStep={proj.activeStage} alternativeLabel>
+                          {proj.stages.map((label: string) => (
+                            <Step key={label}>
+                              <StepLabel>{label}</StepLabel>
+                            </Step>
+                          ))}
+                        </Stepper>
+                      </Box>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                      <Paper elevation={1} sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <LeadIcon color="primary" fontSize="small" /> SPEMS Project Lead
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                          {proj.leadName} ({proj.leadRole})
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                          <EmailIcon fontSize="inherit" /> {proj.leadEmail}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <PhoneIcon fontSize="inherit" /> {proj.leadPhone}
+                        </Typography>
+
+                        <Divider sx={{ my: 1.5 }} />
+
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                            Progress
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 800 }}>
+                            {proj.completionPercentage}%
+                          </Typography>
+                        </Box>
+                        <LinearProgress variant="determinate" value={proj.completionPercentage} sx={{ height: 8, borderRadius: 4 }} />
+                      </Paper>
+                    </Grid>
                   </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Paper elevation={2} sx={{ p: 4, textCenter: 'center', borderRadius: 3, textAlign: 'center' }}>
+            <ProjectIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1.5 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
+              No Active Contracts or Projects Yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, maxWidth: 500, mx: 'auto' }}>
+              Welcome to your Corporate Client Portal! Your assigned projects and live progress updates will appear here once your proposal is accepted by our Super Admin & PMO team.
+            </Typography>
+            <Button variant="contained" startIcon={<RequestIcon />} onClick={() => setRequestModalOpen(true)}>
+              Request New Project Proposal
+            </Button>
+          </Paper>
+        )}
       </CustomTabPanel>
 
       {/* TAB 2: Project Requests Module */}
@@ -415,30 +430,44 @@ export const ClientPortalPage: React.FC = () => {
           </Button>
         </Box>
 
-        <Grid container spacing={2}>
-          {requests.map((req) => (
-            <Grid item xs={12} key={req.id}>
-              <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                    {req.title} ({req.id})
+        {requests.length > 0 ? (
+          <Grid container spacing={2}>
+            {requests.map((req) => (
+              <Grid item xs={12} key={req.id}>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main' }}>
+                      {req.title} ({req.id})
+                    </Typography>
+                    <Chip
+                      label={req.status}
+                      color={req.status === 'ACCEPTED' || req.status === 'APPROVED' ? 'success' : req.status === 'IN_DISCUSSION' ? 'warning' : 'info'}
+                      sx={{ fontWeight: 800 }}
+                    />
+                  </Box>
+                  <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
+                    {req.description}
                   </Typography>
-                  <Chip
-                    label={req.status}
-                    color={req.status === 'APPROVED' ? 'success' : req.status === 'IN_DISCUSSION' ? 'warning' : 'info'}
-                    sx={{ fontWeight: 800 }}
-                  />
-                </Box>
-                <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
-                  {req.description}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Target Budget: <strong>{req.budget}</strong> • Target Start: <strong>{req.startDate}</strong> • Submitted: <strong>{req.submittedDate}</strong>
-                </Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+                  <Typography variant="caption" color="text.secondary">
+                    Target Budget: <strong>{req.budget}</strong> • Target Start: <strong>{req.startDate}</strong> • Submitted: <strong>{req.submittedDate}</strong>
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Paper elevation={2} sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
+              No Project Proposals Submitted
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Have an enterprise project or web application requirement? Click below to submit your RFP / project scope to our PMO team.
+            </Typography>
+            <Button variant="contained" startIcon={<RequestIcon />} onClick={() => setRequestModalOpen(true)}>
+              Submit New Project Proposal
+            </Button>
+          </Paper>
+        )}
       </CustomTabPanel>
 
       {/* TAB 3: MOUs & Document Vault */}
@@ -447,41 +476,53 @@ export const ClientPortalPage: React.FC = () => {
           Legal MOUs, Master Contracts & Deliverables
         </Typography>
 
-        <Grid container spacing={2}>
-          {documents.map((doc) => (
-            <Grid item xs={12} sm={6} md={4} key={doc.id}>
-              <Paper elevation={2} sx={{ p: 2.5, borderRadius: 2, borderTop: '4px solid #0078D4' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <DocumentIcon color="primary" />
-                  <Typography variant="subtitle2" sx={{ fontWeight: 800, flexGrow: 1 }} noWrap>
-                    {doc.title}
-                  </Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Category: {doc.category}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
-                  Signed Date: {doc.signedDate} • Size: {doc.fileSize}
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Chip label={doc.status} color="success" size="small" sx={{ fontWeight: 700 }} />
-                  <Box>
-                    <Tooltip title="Preview Document">
-                      <IconButton size="small" color="primary">
-                        <PreviewIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Download File">
-                      <IconButton size="small" color="primary">
-                        <DownloadIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+        {documents.length > 0 ? (
+          <Grid container spacing={2}>
+            {documents.map((doc) => (
+              <Grid item xs={12} sm={6} md={4} key={doc.id}>
+                <Paper elevation={2} sx={{ p: 2.5, borderRadius: 2, borderTop: '4px solid #0078D4' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <DocumentIcon color="primary" />
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800, flexGrow: 1 }} noWrap>
+                      {doc.title}
+                    </Typography>
                   </Box>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Category: {doc.category}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+                    Signed Date: {doc.signedDate} • Size: {doc.fileSize}
+                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Chip label={doc.status} color="success" size="small" sx={{ fontWeight: 700 }} />
+                    <Box>
+                      <Tooltip title="Preview Document">
+                        <IconButton size="small" color="primary">
+                          <PreviewIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Download File">
+                        <IconButton size="small" color="primary">
+                          <DownloadIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Paper elevation={2} sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+            <DocumentIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+              No Legal Contracts or MOUs Uploaded
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Master Services Agreements (MSA), Statements of Work (SOW), and architecture diagrams will be made available here upon project sign-off.
+            </Typography>
+          </Paper>
+        )}
       </CustomTabPanel>
 
       {/* TAB 4: Support Tickets */}
@@ -495,29 +536,44 @@ export const ClientPortalPage: React.FC = () => {
           </Button>
         </Box>
 
-        <Grid container spacing={2}>
-          {tickets.map((tck) => (
-            <Grid item xs={12} key={tck.id}>
-              <Paper elevation={2} sx={{ p: 2.5, borderRadius: 2, borderLeft: '5px solid #d32f2f' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                    [{tck.id}] {tck.title}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Chip label={tck.priority} color={tck.priority === 'High' ? 'error' : 'warning'} size="small" sx={{ fontWeight: 800 }} />
-                    <Chip label={tck.status} color={tck.status === 'Resolved' ? 'success' : 'info'} size="small" sx={{ fontWeight: 800 }} />
+        {tickets.length > 0 ? (
+          <Grid container spacing={2}>
+            {tickets.map((tck) => (
+              <Grid item xs={12} key={tck.id}>
+                <Paper elevation={2} sx={{ p: 2.5, borderRadius: 2, borderLeft: '5px solid #d32f2f' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                      [{tck.id}] {tck.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Chip label={tck.priority} color={tck.priority === 'High' ? 'error' : 'warning'} size="small" sx={{ fontWeight: 800 }} />
+                      <Chip label={tck.status} color={tck.status === 'Resolved' ? 'success' : 'info'} size="small" sx={{ fontWeight: 800 }} />
+                    </Box>
                   </Box>
-                </Box>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  {tck.description}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  Project: <strong>{tck.projectName}</strong> • Assigned Lead: <strong>{tck.assignedLead}</strong> • Created: <strong>{tck.createdDate}</strong>
-                </Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    {tck.description}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    Project: <strong>{tck.projectName}</strong> • Assigned Lead: <strong>{tck.assignedLead}</strong> • Created: <strong>{tck.createdDate}</strong>
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Paper elevation={2} sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+            <TicketIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1 }}>
+              No Active Support Tickets
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Have questions, issues, or change requests for an active project? Raise a support ticket directly to your designated Project Manager.
+            </Typography>
+            <Button variant="contained" color="error" startIcon={<TicketIcon />} onClick={() => setTicketModalOpen(true)}>
+              Raise New Support Ticket
+            </Button>
+          </Paper>
+        )}
       </CustomTabPanel>
 
       {/* TAB 5: Meetings & Calendar */}
@@ -526,38 +582,50 @@ export const ClientPortalPage: React.FC = () => {
           Scheduled Client Meetings & Reviews
         </Typography>
 
-        <Grid container spacing={2}>
-          {meetings.map((mtg) => (
-            <Grid item xs={12} md={6} key={mtg.id}>
-              <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
-                  {mtg.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {mtg.agenda}
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ fontWeight: 700 }}>
-                  📅 Date: {mtg.date} | {mtg.time}
-                </Typography>
-                <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 2 }}>
-                  Organizer: {mtg.organizer}
-                </Typography>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  size="small"
-                  startIcon={<VideoCallIcon />}
-                  component="a"
-                  href={mtg.videoLink}
-                  target="_blank"
-                  sx={{ fontWeight: 700 }}
-                >
-                  Join Meeting Call
-                </Button>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+        {meetings.length > 0 ? (
+          <Grid container spacing={2}>
+            {meetings.map((mtg) => (
+              <Grid item xs={12} md={6} key={mtg.id}>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
+                    {mtg.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {mtg.agenda}
+                  </Typography>
+                  <Typography variant="caption" display="block" sx={{ fontWeight: 700 }}>
+                    📅 Date: {mtg.date} | {mtg.time}
+                  </Typography>
+                  <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 2 }}>
+                    Organizer: {mtg.organizer}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    startIcon={<VideoCallIcon />}
+                    component="a"
+                    href={mtg.videoLink}
+                    target="_blank"
+                    sx={{ fontWeight: 700 }}
+                  >
+                    Join Meeting Call
+                  </Button>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Paper elevation={2} sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+            <VideoCallIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+              No Scheduled Meetings Currently
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Project review calls, Sprint Demos, and Steering Committee meetings will be scheduled here with video conference links.
+            </Typography>
+          </Paper>
+        )}
       </CustomTabPanel>
 
       {/* Modals */}

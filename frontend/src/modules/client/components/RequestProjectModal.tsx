@@ -52,6 +52,35 @@ export const RequestProjectModal: React.FC<RequestProjectModalProps> = ({
   const [success, setSuccess] = useState(false);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (user && open) {
+      setFormData((prev) => ({
+        ...prev,
+        clientOrganization: (user as any)?.organization || (user as any)?.companyName || prev.clientOrganization,
+        contactPerson: `${user.firstName || ''} ${user.lastName || ''}`.trim() || prev.contactPerson,
+        contactEmail: user.email || prev.contactEmail,
+      }));
+
+      api.get('/clients')
+        .then((res) => {
+          if (res.data?.data && Array.isArray(res.data.data)) {
+            const myClient = res.data.data.find((c: any) => c.email === user.email || c.user?.email === user.email);
+            if (myClient) {
+              setFormData((prev) => ({
+                ...prev,
+                clientOrganization: myClient.companyName || prev.clientOrganization,
+                contactPerson: myClient.contactPerson || prev.contactPerson,
+                contactEmail: myClient.email || prev.contactEmail,
+                contactPhone: myClient.phone || prev.contactPhone,
+                industry: myClient.industry || prev.industry,
+              }));
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, open]);
+
   const steps = [
     'Client & Company Info',
     'Project Overview',
@@ -63,13 +92,13 @@ export const RequestProjectModal: React.FC<RequestProjectModalProps> = ({
 
   const [formData, setFormData] = useState({
     // Step 1 – Client & Company Information
-    clientOrganization: (user as any)?.organization || 'Global Bank Corp',
-    contactPerson: user ? `${user.firstName} ${user.lastName}` : 'Client Executive',
-    contactEmail: user?.email || 'robert@globalbank.com',
-    contactPhone: '+1 (555) 019-2831',
+    clientOrganization: (user as any)?.organization || (user as any)?.companyName || '',
+    contactPerson: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
+    contactEmail: user?.email || '',
+    contactPhone: (user as any)?.phone || '',
     industry: 'Financial Technology / Banking',
-    companySize: '1,000 - 5,000 Employees',
-    companyAddress: '100 Wall Street, Floor 24, New York, NY 10005',
+    companySize: '100 - 500 Employees',
+    companyAddress: 'Corporate Headquarters',
     country: 'United States',
     timeZone: 'EST (UTC-5)',
 
