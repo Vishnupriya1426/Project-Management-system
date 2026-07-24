@@ -205,7 +205,7 @@ export const ClientPortalPage: React.FC = () => {
         }}
       >
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={8}>
+          <Grid item xs={12}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Avatar sx={{ width: 60, height: 60, bgcolor: 'rgba(255,255,255,0.2)', color: '#fff' }}>
                 <BusinessIcon sx={{ fontSize: 36 }} />
@@ -219,17 +219,6 @@ export const ClientPortalPage: React.FC = () => {
                 </Typography>
               </Box>
             </Box>
-          </Grid>
-          <Grid item xs={12} md={4} sx={{ textAlign: { md: 'right' } }}>
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<RequestIcon />}
-              onClick={() => setRequestModalOpen(true)}
-              sx={{ fontWeight: 700 }}
-            >
-              Request New Project
-            </Button>
           </Grid>
         </Grid>
       </Paper>
@@ -416,9 +405,11 @@ export const ClientPortalPage: React.FC = () => {
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
             Submitted Project Proposals & Scope Requests
           </Typography>
-          <Button variant="contained" startIcon={<RequestIcon />} onClick={() => setRequestModalOpen(true)}>
-            Submit New Proposal
-          </Button>
+          {requests.length > 0 && (
+            <Button variant="contained" startIcon={<RequestIcon />} onClick={() => setRequestModalOpen(true)}>
+              Submit New Proposal
+            </Button>
+          )}
         </Box>
 
         {requests.length > 0 ? (
@@ -522,9 +513,11 @@ export const ClientPortalPage: React.FC = () => {
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
             Support Tickets & Escalation Center
           </Typography>
-          <Button variant="contained" color="error" startIcon={<TicketIcon />} onClick={() => setTicketModalOpen(true)}>
-            Raise New Support Ticket
-          </Button>
+          {tickets.length > 0 && (
+            <Button variant="contained" color="error" startIcon={<TicketIcon />} onClick={() => setTicketModalOpen(true)}>
+              Raise New Support Ticket
+            </Button>
+          )}
         </Box>
 
         {tickets.length > 0 ? (
