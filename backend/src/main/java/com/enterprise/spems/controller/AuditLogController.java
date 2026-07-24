@@ -3,8 +3,6 @@ package com.enterprise.spems.controller;
 import com.enterprise.spems.dto.ApiResponse;
 import com.enterprise.spems.model.entity.AuditLog;
 import com.enterprise.spems.repository.AuditLogRepository;
-import com.enterprise.spems.service.AuditLogService;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,21 +31,6 @@ import java.util.stream.Collectors;
 public class AuditLogController {
 
     private final AuditLogRepository auditLogRepository;
-    private final AuditLogService auditLogService;
-
-    @PostConstruct
-    public void initDefaultAuditLogs() {
-        if (auditLogRepository.count() == 0) {
-            auditLogService.logEvent(null, "admin@spems.com", "ROLE_SUPER_ADMIN", "Authentication", "Login", "User", 1L, "127.0.0.1", "SUCCESS", "Super Admin logged in successfully with MFA authentication.");
-            auditLogService.logEvent(null, "admin@spems.com", "ROLE_SUPER_ADMIN", "Organization", "Organization Created", "Organization", 1L, "127.0.0.1", "SUCCESS", "Created primary enterprise organization profile 'SPEMS Enterprise HQ'.");
-            auditLogService.logEvent(null, "pm@spems.com", "ROLE_PROJECT_MANAGER", "Employees", "Employee Created", "Employee", 101L, "192.168.1.45", "SUCCESS", "Registered new senior developer account for Engineering squad.");
-            auditLogService.logEvent(null, "client@globalbank.com", "ROLE_CLIENT", "Clients & Proposals", "Proposal Submitted", "ProjectProposal", 201L, "172.16.0.12", "SUCCESS", "Submitted RFP proposal 'Global Banking 2.0 Modernization'.");
-            auditLogService.logEvent(null, "pm@spems.com", "ROLE_PROJECT_MANAGER", "Projects", "Project Created", "Project", 301L, "192.168.1.45", "SUCCESS", "Initialized project workspace 'Healthcare Patient Portal'.");
-            auditLogService.logEvent(null, "admin@spems.com", "ROLE_SUPER_ADMIN", "Reports", "PDF Export", "Report", 401L, "127.0.0.1", "SUCCESS", "Downloaded Executive Performance Analytics PDF report.");
-            auditLogService.logEvent(null, "engmanager@spems.com", "ROLE_ENG_MANAGER", "Teams & Resource Allocation", "Employee Assigned", "Team", 501L, "192.168.1.88", "SUCCESS", "Assigned 3 full-stack engineers to Sprint 15 velocity team.");
-            auditLogService.logEvent(null, "admin@spems.com", "ROLE_SUPER_ADMIN", "Security", "Permission Changed", "Role", 1L, "127.0.0.1", "SUCCESS", "Updated granular role permissions for Project Managers.");
-        }
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllAuditLogs(
