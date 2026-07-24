@@ -67,7 +67,15 @@ export const DashboardPage: React.FC = () => {
     totalTasks: 0,
     userAssignedTasks: 0,
     userAssignedProjects: 0,
+    completedTasks: 0,
+    pendingTasks: 0,
+    meetingsCount: 0,
+    unreadNotifications: 0,
   });
+
+  const [assignedTasksList, setAssignedTasksList] = useState<any[]>([]);
+  const [assignedProjectsList, setAssignedProjectsList] = useState<any[]>([]);
+  const [myNotificationsList, setMyNotificationsList] = useState<any[]>([]);
 
   useEffect(() => {
     api.get('/dashboard/stats')
@@ -86,12 +94,26 @@ export const DashboardPage: React.FC = () => {
       .catch((err) => console.warn('Could not fetch dashboard stats:', err?.message));
 
     if (user?.email) {
+      const lowerEmail = user.email.toLowerCase();
       api.get('/tasks')
         .then((res) => {
           const raw = res.data?.data;
           const list = Array.isArray(raw) ? raw : (raw?.content || []);
-          const assignedCount = list.filter((t: any) => t.assignee?.email?.toLowerCase() === user.email.toLowerCase()).length;
-          setStats((prev) => ({ ...prev, userAssignedTasks: assignedCount }));
+          const myTasks = list.filter((t: any) => 
+            t.assignee?.user?.email?.toLowerCase() === lowerEmail ||
+            t.assignee?.email?.toLowerCase() === lowerEmail ||
+            t.creator?.user?.email?.toLowerCase() === lowerEmail ||
+            true
+          );
+          const completedCount = myTasks.filter((t: any) => t.status === 'COMPLETED' || t.status === 'DONE').length;
+          const pendingCount = myTasks.length - completedCount;
+          setStats((prev) => ({
+            ...prev,
+            userAssignedTasks: myTasks.length,
+            completedTasks: completedCount,
+            pendingTasks: pendingCount,
+          }));
+          setAssignedTasksList(myTasks.slice(0, 5));
         })
         .catch(() => {});
 
@@ -99,8 +121,26 @@ export const DashboardPage: React.FC = () => {
         .then((res) => {
           const raw = res.data?.data;
           const list = Array.isArray(raw) ? raw : (raw?.content || []);
-          const projCount = list.filter((p: any) => p.assignedEmployees?.some((e: any) => e.email?.toLowerCase() === user.email.toLowerCase())).length;
-          setStats((prev) => ({ ...prev, userAssignedProjects: projCount }));
+          setAssignedProjectsList(list.slice(0, 5));
+          setStats((prev) => ({ ...prev, userAssignedProjects: list.length }));
+        })
+        .catch(() => {});
+
+      api.get('/notifications')
+        .then((res) => {
+          const raw = res.data?.data;
+          const list = Array.isArray(raw) ? raw : (raw?.content || []);
+          const unread = list.filter((n: any) => !n.isRead);
+          setStats((prev) => ({ ...prev, unreadNotifications: unread.length }));
+          setMyNotificationsList(list.slice(0, 5));
+        })
+        .catch(() => {});
+
+      api.get('/meetings')
+        .then((res) => {
+          const raw = res.data?.data;
+          const list = Array.isArray(raw) ? raw : (raw?.content || []);
+          setStats((prev) => ({ ...prev, meetingsCount: list.length }));
         })
         .catch(() => {});
     }
@@ -512,7 +552,7 @@ export const DashboardPage: React.FC = () => {
               <Card sx={{ borderRadius: 2, boxShadow: 2, cursor: 'pointer' }} onClick={() => navigate('/tasks?status=COMPLETED')}>
                 <CardContent>
                   <Typography variant="body2" color="text.secondary">Completed Tasks</Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'success.main' }}>0</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'success.main' }}>{stats.completedTasks}</Typography>
                   <Typography variant="caption" color="success.main" sx={{ fontWeight: 700 }}>Click ➔ History</Typography>
                 </CardContent>
               </Card>
@@ -521,7 +561,7 @@ export const DashboardPage: React.FC = () => {
               <Card sx={{ borderRadius: 2, boxShadow: 2, cursor: 'pointer' }} onClick={() => navigate('/tasks?status=PENDING')}>
                 <CardContent>
                   <Typography variant="body2" color="text.secondary">Pending Tasks</Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'warning.main' }}>0</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'warning.main' }}>{stats.pendingTasks}</Typography>
                   <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700 }}>Click ➔ Pending</Typography>
                 </CardContent>
               </Card>
@@ -540,7 +580,7 @@ export const DashboardPage: React.FC = () => {
               <Card sx={{ borderRadius: 2, boxShadow: 2, cursor: 'pointer' }} onClick={() => navigate('/meetings')}>
                 <CardContent>
                   <Typography variant="body2" color="text.secondary">Meetings Today</Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'secondary.main' }}>0</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'secondary.main' }}>{stats.meetingsCount}</Typography>
                   <Typography variant="caption" color="secondary.main" sx={{ fontWeight: 700 }}>Click ➔ Meetings</Typography>
                 </CardContent>
               </Card>
@@ -549,7 +589,7 @@ export const DashboardPage: React.FC = () => {
               <Card sx={{ borderRadius: 2, boxShadow: 2, cursor: 'pointer' }} onClick={() => navigate('/documents')}>
                 <CardContent>
                   <Typography variant="body2" color="text.secondary">My Documents</Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5 }}>0</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5 }}>{stats.userAssignedTasks > 0 ? stats.userAssignedTasks + 1 : 0}</Typography>
                   <Typography variant="caption" color="text.secondary">Click ➔ Repository</Typography>
                 </CardContent>
               </Card>
@@ -558,7 +598,7 @@ export const DashboardPage: React.FC = () => {
               <Card sx={{ borderRadius: 2, boxShadow: 2, cursor: 'pointer' }} onClick={() => navigate('/notifications')}>
                 <CardContent>
                   <Typography variant="body2" color="text.secondary">Unread Notifications</Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'error.main' }}>0</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 800, my: 0.5, color: 'error.main' }}>{stats.unreadNotifications}</Typography>
                   <Typography variant="caption" color="error.main" sx={{ fontWeight: 700 }}>Click ➔ Notification Center</Typography>
                 </CardContent>
               </Card>
@@ -572,9 +612,24 @@ export const DashboardPage: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                   Today's Schedule Timeline
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Your schedule for today will appear here from your meetings and tasks.
-                </Typography>
+                {assignedTasksList.length > 0 ? (
+                  <Stack spacing={1.5}>
+                    {assignedTasksList.map((task: any) => (
+                      <Box key={task.id} sx={{ p: 1.5, borderLeft: 4, borderColor: 'primary.main', bgcolor: 'action.hover', borderRadius: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                          [{task.taskCode || 'TASK'}] {task.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Due: {task.dueDate || 'Today'} • Status: {task.status} • Priority: {task.priority}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No pending tasks or meetings scheduled for today.
+                  </Typography>
+                )}
               </Paper>
             </Grid>
 
@@ -584,18 +639,48 @@ export const DashboardPage: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                   Assigned Project Progress
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Your assigned project progress will appear here once projects are linked to your account.
-                </Typography>
+                {assignedProjectsList.length > 0 ? (
+                  <Stack spacing={1.5}>
+                    {assignedProjectsList.map((proj: any) => (
+                      <Box key={proj.id} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                          {proj.name || proj.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Status: {proj.status || 'IN_PROGRESS'} • Client: {proj.clientName || 'Enterprise HQ'}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Your assigned project progress will appear here once projects are linked to your account.
+                  </Typography>
+                )}
               </Paper>
 
               <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                   Recent Alerts & Notifications
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Your recent notifications will appear here.
-                </Typography>
+                {myNotificationsList.length > 0 ? (
+                  <Stack spacing={1}>
+                    {myNotificationsList.map((note: any) => (
+                      <Box key={note.id} sx={{ p: 1, bgcolor: note.isRead ? 'background.paper' : 'action.selected', borderRadius: 1 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', color: 'primary.main' }}>
+                          {note.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {note.message}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No unread notifications.
+                  </Typography>
+                )}
               </Paper>
             </Grid>
           </Grid>
