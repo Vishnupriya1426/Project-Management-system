@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Production build artifacts
+dist/
+dist-ssr/
+*.local
+
+# Secrets & Environment Variables (CONFIDENTIAL - DO NOT COMMIT TO GIT)
+.env
+*.env
+application-secrets.yml
+application-local.yml
+
+# Maven target & build output
+target/
+*.class
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

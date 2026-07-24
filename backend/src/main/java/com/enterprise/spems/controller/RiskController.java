@@ -1,0 +1,19 @@
+package com.enterprise.spems.controller;
+
+import com.enterprise.spems.dto.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/risks")
+public class RiskController {
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Object>>> getAllRisks(HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(Collections.emptyList(), "Risks retrieved successfully", request.getRequestURI()));
+    }
+}

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  spems-mysql:
+    image: mysql:8.0
+    container_name: spems-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-spems_db}
+      MYSQL_USER: ${MYSQL_USER:-spems_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-spems_password}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - spems-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  spems-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spems-backend
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://spems-mysql:3306/${MYSQL_DATABASE:-spems_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-spems_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-spems_password}
+      SPRING_DATASOURCE_DRIVER: com.mysql.cj.jdbc.Driver
+      JWT_SECRET: ${JWT_SECRET:-9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b}
+      STORAGE_LOCAL_DIRECTORY: /app/uploads
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-noreply@spems-enterprise.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-secret_password}
+    volumes:
+      - upload_data:/app/uploads
+    depends_on:
+      spems-mysql:
+        condition: service_healthy
+    networks:
+      - spems-network
+
+  spems-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spems-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - spems-backend
+    networks:
+      - spems-network
+
+volumes:
+  mysql_data:
+    driver: local
+  upload_data:
+    driver: local
+
+networks:
+  spems-network:
+    driver: bridge

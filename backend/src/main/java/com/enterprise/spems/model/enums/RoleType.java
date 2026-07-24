@@ -1,0 +1,17 @@
+package com.enterprise.spems.model.enums;
+
+public enum RoleType {
+    ROLE_SUPER_ADMIN,
+    ROLE_ADMIN,
+    ROLE_HR_MANAGER,
+    ROLE_ENG_MANAGER,
+    ROLE_PROJECT_MANAGER,
+    ROLE_TEAM_LEAD,
+    ROLE_SR_DEVELOPER,
+    ROLE_JR_DEVELOPER,
+    ROLE_QA_ENGINEER,
+    ROLE_DEVOPS_ENGINEER,
+    ROLE_EMPLOYEE,
+    ROLE_CLIENT,
+    ROLE_INTERN
+}
