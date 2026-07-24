@@ -95,7 +95,7 @@ public class EmployeeController {
         }
 
         User user = employee.getUser();
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
         return ResponseEntity.ok(ApiResponse.success("Password updated successfully for " + user.getEmail(), "Password reset successfully", request.getRequestURI()));
