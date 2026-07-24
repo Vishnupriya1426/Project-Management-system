@@ -189,15 +189,15 @@ public class ProjectController {
         List<Map<String, Object>> taskList = new ArrayList<>();
         int completedTasks = 0;
         for (Task t : tasks) {
-            if (t.getStatus() != null && t.getStatus().name().equalsIgnoreCase("DONE")) {
+            if (t.getStatus() != null && (t.getStatus().equalsIgnoreCase("DONE") || t.getStatus().equalsIgnoreCase("COMPLETED"))) {
                 completedTasks++;
             }
             Map<String, Object> tMap = new HashMap<>();
             tMap.put("id", t.getId());
             tMap.put("title", t.getTitle());
-            tMap.put("status", t.getStatus() != null ? t.getStatus().name() : "TODO");
-            tMap.put("priority", t.getPriority() != null ? t.getPriority().name() : "MEDIUM");
-            tMap.put("dueDate", t.getDueDate() != null ? t.getDueDate().toString() : "");
+            tMap.put("status", t.getStatus() != null ? t.getStatus() : "TODO");
+            tMap.put("priority", t.getPriority() != null ? t.getPriority() : "MEDIUM");
+            tMap.put("dueDate", t.getDueDate() != null ? t.getDueDate() : "");
             taskList.add(tMap);
         }
         map.put("tasks", taskList);
