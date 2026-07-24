@@ -24,6 +24,7 @@ import {
   CheckCircle as CompletedIcon,
   TrendingUp as ProgressIcon,
   ConfirmationNumber as TicketIcon,
+  AddTask as RequestIcon,
   Description as DocumentIcon,
   Download as DownloadIcon,
   Visibility as PreviewIcon,
@@ -35,6 +36,7 @@ import {
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 
+import { RequestProjectModal } from '../components/RequestProjectModal';
 import { RaiseSupportTicketModal } from '../components/RaiseSupportTicketModal';
 import api from '../../../config/axios.config';
 
@@ -71,6 +73,7 @@ export const ClientPortalPage: React.FC = () => {
   const [tickets, setTickets] = useState<any[]>(INITIAL_SUPPORT_TICKETS);
   const [meetings, setMeetings] = useState<any[]>(INITIAL_CLIENT_MEETINGS);
 
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -164,6 +167,11 @@ export const ClientPortalPage: React.FC = () => {
   ) : 0;
   const openTicketsCount = tickets.filter((t) => t.status !== 'Resolved' && t.status !== 'Closed' && t.status !== 'RESOLVED').length;
 
+
+  const handleRequestSubmitted = (newReq: any) => {
+    setRequests((prev) => [newReq, ...prev]);
+    setNotice(`New Project Proposal "${newReq.title}" submitted successfully.`);
+  };
 
   const handleTicketSubmitted = (newTicket: any) => {
     setTickets((prev) => [newTicket, ...prev]);
@@ -392,10 +400,13 @@ export const ClientPortalPage: React.FC = () => {
 
       {/* TAB 2: Project Requests Module */}
       <CustomTabPanel value={tabIndex} index={2}>
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
             Submitted Project Proposals & Scope Requests
           </Typography>
+          <Button variant="contained" startIcon={<RequestIcon />} onClick={() => setRequestModalOpen(true)}>
+            Submit New Proposal
+          </Button>
         </Box>
 
         {requests.length > 0 ? (
@@ -428,9 +439,12 @@ export const ClientPortalPage: React.FC = () => {
             <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
               No Project Proposals Submitted
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Submitted RFPs and project scope proposals will appear here.
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Have an enterprise project or web application requirement? Submit your RFP / project scope to our PMO team.
             </Typography>
+            <Button variant="contained" startIcon={<RequestIcon />} onClick={() => setRequestModalOpen(true)}>
+              Submit New Project Proposal
+            </Button>
           </Paper>
         )}
       </CustomTabPanel>
@@ -596,6 +610,11 @@ export const ClientPortalPage: React.FC = () => {
       </CustomTabPanel>
 
       {/* Modals */}
+      <RequestProjectModal
+        open={requestModalOpen}
+        onClose={() => setRequestModalOpen(false)}
+        onRequestSubmitted={handleRequestSubmitted}
+      />
       <RaiseSupportTicketModal
         open={ticketModalOpen}
         onClose={() => setTicketModalOpen(false)}
