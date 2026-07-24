@@ -202,58 +202,53 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
     setParticipants(participants.filter((p) => p.id !== id));
   };
 
-  const handleScheduleAndSend = () => {
+  const handleScheduleAndSend = async () => {
     if (!title) {
       setNotice('Please enter a Meeting Title.');
       return;
     }
 
-    const newMeeting = {
-      id: Date.now(),
-      meetingId: `MTG-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+    const matchedProject = projects.find((p) => (p.title || p.name) === selectedProject);
+    const matchedTeam = teams.find((t) => t.name === selectedTeam);
+    const matchedOrg = organizations.find((o) => (o.companyName || o.name) === selectedOrg);
+
+    let visibilityScope = 'PROJECT_TEAM';
+    if (meetingType === 'Client Meeting' || selectedOrg) {
+      visibilityScope = 'CLIENT_ONLY';
+    } else if (meetingType === 'Management Review' || meetingType === 'HR Meeting') {
+      visibilityScope = 'ROLE_RESTRICTED';
+    } else if (meetingType === 'All Hands') {
+      visibilityScope = 'PUBLIC_ENTERPRISE';
+    }
+
+    const payload = {
       title,
-      type: meetingType,
-      description,
-      priority,
-      status,
-      organization: selectedOrg,
-      department: selectedDept,
-      team: selectedTeam,
-      project: selectedProject,
-      organizer,
-      owner,
-      moderator,
-      recorder,
-      participants,
-      meetingDate,
-      startTime,
-      endTime,
-      timezone,
-      duration: '60 mins',
-      recurring,
-      recurringEndDate,
+      meetingType,
+      visibilityScope,
+      meetingDate: meetingDate || '2026-07-25',
+      startTime: startTime || '10:00',
+      endTime: endTime || '11:00',
+      durationMinutes: 60,
+      meetingUrl: meetingUrl || 'https://meet.google.com/spems-sync',
       locationType,
-      meetingUrl,
-      building,
-      floorRoom,
-      sprint,
-      milestone,
-      ticketNumber,
-      attachment: attachmentName || 'Sprint_15_Planning_Agenda.pdf',
-      reminderTime,
-      sendEmailInvite,
-      sendBellAlert,
-      sendDashboardWidget,
-      allowRecording,
-      allowScreenShare,
-      requireApproval,
-      mandatoryAttendance,
+      buildingRoom: `${building} ${floorRoom}`.trim(),
       agenda,
-      discussionTopics,
+      status: 'SCHEDULED',
+      projectId: matchedProject ? matchedProject.id : null,
+      teamId: matchedTeam ? matchedTeam.id : null,
+      clientId: matchedOrg ? matchedOrg.id : null,
+      participantIds: participants.map((p) => p.id),
     };
 
-    onSuccess(newMeeting);
-    onClose();
+    try {
+      const res = await api.post('/meetings', payload);
+      const createdData = res.data?.data || payload;
+      onSuccess(createdData);
+      onClose();
+    } catch (err: any) {
+      console.error('Error scheduling meeting:', err);
+      setNotice(err.response?.data?.message || 'Failed to schedule meeting.');
+    }
   };
 
   return (
