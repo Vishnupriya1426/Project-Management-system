@@ -35,6 +35,10 @@ public class Notification {
     private String linkUrl;
 
     @Builder.Default
+    @Column(name = "notification_type", length = 50)
+    private String notificationType = "GENERAL";
+
+    @Builder.Default
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 

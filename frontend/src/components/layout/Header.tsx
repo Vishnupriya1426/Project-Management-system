@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -12,6 +12,7 @@ import {
   InputBase,
   alpha,
   styled,
+  Badge,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -25,6 +26,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCustomTheme } from '../../context/ThemeContext';
+import api from '../../config/axios.config';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -71,6 +73,38 @@ export const Header: React.FC = () => {
   const { mode, toggleTheme } = useCustomTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
+  // ── Unread notification count (badge on bell) ──────────────────────────
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchUnreadCount = () => {
+    if (!user?.userId) return;
+    api
+      .get(`/notifications/unread-count?recipientId=${user.userId}`)
+      .then((res) => {
+        const count = res.data?.data?.unreadCount ?? 0;
+        setUnreadCount(Number(count));
+      })
+      .catch(() => {
+        // silently ignore — badge stays at last known value
+      });
+  };
+
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    // Fetch immediately on mount / user change
+    fetchUnreadCount();
+
+    // Poll every 30 seconds
+    pollRef.current = setInterval(fetchUnreadCount, 30_000);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [user?.userId]);
+  // ──────────────────────────────────────────────────────────────────────
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -83,6 +117,12 @@ export const Header: React.FC = () => {
     handleMenuClose();
     logout();
     navigate('/login');
+  };
+
+  const handleNotificationsClick = () => {
+    navigate('/notifications');
+    // Optimistically reset badge when user opens notifications
+    setUnreadCount(0);
   };
 
   const getRoleDisplayName = (role?: string) => {
@@ -139,8 +179,23 @@ export const Header: React.FC = () => {
             {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
 
-          <IconButton color="inherit" onClick={() => navigate('/notifications')}>
-            <NotificationsIcon />
+          {/* Notification bell with live unread badge */}
+          <IconButton color="inherit" onClick={handleNotificationsClick} id="header-notifications-btn">
+            <Badge
+              badgeContent={unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : null}
+              color="error"
+              sx={{
+                '& .MuiBadge-badge': {
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  minWidth: 18,
+                  height: 18,
+                  padding: '0 4px',
+                },
+              }}
+            >
+              <NotificationsIcon />
+            </Badge>
           </IconButton>
 
           {user && (

@@ -64,6 +64,7 @@ public class TeamController {
                             .title("Assigned as Team Lead for " + team.getName())
                             .message("You have been designated as Team Lead for " + team.getName())
                             .linkUrl("/teams")
+                            .notificationType("TEAM_LEAD_ASSIGNED")
                             .isRead(false)
                             .build());
                 }
@@ -80,6 +81,7 @@ public class TeamController {
                             .title("Assigned as Scrum Master for " + team.getName())
                             .message("You have been designated as Program Manager / Scrum Master for " + team.getName())
                             .linkUrl("/teams")
+                            .notificationType("SCRUM_MASTER_ASSIGNED")
                             .isRead(false)
                             .build());
                 }
@@ -100,6 +102,7 @@ public class TeamController {
                                     .title("Assigned to Squad: " + team.getName())
                                     .message("You were added to the " + team.getName() + " delivery team.")
                                     .linkUrl("/teams")
+                                    .notificationType("TEAM_ASSIGNED")
                                     .isRead(false)
                                     .build());
                         }

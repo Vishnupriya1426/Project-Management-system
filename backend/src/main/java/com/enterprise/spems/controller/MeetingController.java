@@ -127,6 +127,7 @@ public class MeetingController {
                                             .title("Meeting Invitation: " + saved.getTitle())
                                             .message("You have been invited to '" + saved.getTitle() + "' (" + saved.getMeetingType() + ") scheduled on " + saved.getMeetingDate() + " at " + saved.getStartTime())
                                             .linkUrl("/meetings")
+                                            .notificationType("MEETING_INVITE")
                                             .isRead(false)
                                             .build();
                                     notificationRepository.save(notif);

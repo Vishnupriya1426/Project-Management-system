@@ -119,6 +119,7 @@ public class TaskController {
                                 .title("New Task Assigned: " + task.getTitle())
                                 .message("You have been assigned task '" + task.getTitle() + "' due on " + task.getDueDate())
                                 .linkUrl("/tasks")
+                                .notificationType("TASK_ASSIGNED")
                                 .isRead(false)
                                 .build());
                     } catch (Exception ignored) {}
