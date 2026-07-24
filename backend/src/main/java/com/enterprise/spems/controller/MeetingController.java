@@ -21,6 +21,7 @@ public class MeetingController {
     private final ProjectRepository projectRepository;
     private final TeamRepository teamRepository;
     private final ClientRepository clientRepository;
+    private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationRepository notificationRepository;
 
@@ -29,6 +30,7 @@ public class MeetingController {
             @RequestParam(required = false) Long projectId,
             @RequestParam(required = false) Long teamId,
             @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) String scope,
             HttpServletRequest request) {
 
@@ -86,6 +88,7 @@ public class MeetingController {
         Long projectId = payload.get("projectId") != null ? Long.valueOf(payload.get("projectId").toString()) : null;
         Long teamId = payload.get("teamId") != null ? Long.valueOf(payload.get("teamId").toString()) : null;
         Long clientId = payload.get("clientId") != null ? Long.valueOf(payload.get("clientId").toString()) : null;
+        Long departmentId = payload.get("departmentId") != null ? Long.valueOf(payload.get("departmentId").toString()) : null;
 
         Meeting m = new Meeting();
         m.setTitle(title);
@@ -105,6 +108,7 @@ public class MeetingController {
         if (projectId != null) projectRepository.findById(projectId).ifPresent(m::setProject);
         if (teamId != null) teamRepository.findById(teamId).ifPresent(m::setTeam);
         if (clientId != null) clientRepository.findById(clientId).ifPresent(m::setClient);
+        if (departmentId != null) departmentRepository.findById(departmentId).ifPresent(m::setDepartment);
 
         Meeting saved = meetingRepository.save(m);
 
@@ -159,7 +163,7 @@ public class MeetingController {
             map.put("projectId", m.getProject().getId());
             map.put("projectName", m.getProject().getTitle());
         } else {
-            map.put("projectName", "Enterprise System");
+            map.put("projectName", "Enterprise Workspace");
         }
 
         if (m.getTeam() != null) {
@@ -172,6 +176,16 @@ public class MeetingController {
         if (m.getClient() != null) {
             map.put("clientId", m.getClient().getId());
             map.put("clientName", m.getClient().getCompanyName());
+            map.put("organizationName", m.getClient().getCompanyName());
+        } else {
+            map.put("organizationName", "SPEMS Enterprise HQ");
+        }
+
+        if (m.getDepartment() != null) {
+            map.put("departmentId", m.getDepartment().getId());
+            map.put("departmentName", m.getDepartment().getName());
+        } else {
+            map.put("departmentName", "Engineering");
         }
 
         return map;

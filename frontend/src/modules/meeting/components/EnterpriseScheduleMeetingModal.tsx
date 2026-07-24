@@ -34,6 +34,8 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
 }) => {
   const [title, setTitle] = useState('');
   const [meetingType, setMeetingType] = useState('Sprint Planning');
+  const [clientId, setClientId] = useState<number | ''>('');
+  const [departmentId, setDepartmentId] = useState<number | ''>('');
   const [projectId, setProjectId] = useState<number | ''>('');
   const [teamId, setTeamId] = useState<number | ''>('');
   const [meetingDate, setMeetingDate] = useState('2026-07-25');
@@ -44,12 +46,28 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
   const [agenda, setAgenda] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
 
   useEffect(() => {
     if (open) {
+      api.get('/clients')
+        .then((res) => {
+          const raw = res.data?.data?.content || res.data?.data || [];
+          if (Array.isArray(raw)) setOrganizations(raw);
+        })
+        .catch(() => setOrganizations([]));
+
+      api.get('/departments')
+        .then((res) => {
+          const raw = res.data?.data?.content || res.data?.data || [];
+          if (Array.isArray(raw)) setDepartments(raw);
+        })
+        .catch(() => setDepartments([]));
+
       api.get('/projects')
         .then((res) => {
           const raw = res.data?.data?.content || res.data?.data || [];
@@ -80,7 +98,7 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
     }
 
     let visibilityScope = 'PROJECT_TEAM';
-    if (meetingType === 'Client Review') visibilityScope = 'CLIENT_ONLY';
+    if (meetingType === 'Client Review' || clientId) visibilityScope = 'CLIENT_ONLY';
     if (meetingType === 'All Hands') visibilityScope = 'PUBLIC_ENTERPRISE';
 
     const payload = {
@@ -94,6 +112,8 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
       locationType: 'Online',
       agenda: agenda || 'Role-based enterprise meeting discussion',
       status: 'SCHEDULED',
+      clientId: clientId || null,
+      departmentId: departmentId || null,
       projectId: projectId || null,
       teamId: teamId || null,
       participantIds: selectedParticipantIds,
@@ -135,7 +155,7 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
               label="Meeting Title *"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Sprint 15 Velocity & Security Architecture Review"
+              placeholder="e.g. Q3 Sprint 15 Velocity & Architecture Alignment Sync"
               fullWidth
               required
             />
@@ -159,7 +179,43 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
             </TextField>
           </Grid>
 
-          {/* 3. PROJECT */}
+          {/* 3. ORGANIZATION / CLIENT */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              select
+              label="Target Organization"
+              value={clientId}
+              onChange={(e) => setClientId(Number(e.target.value))}
+              fullWidth
+            >
+              <MenuItem value="">-- Internal Enterprise HQ --</MenuItem>
+              {organizations.map((org) => (
+                <MenuItem key={org.id} value={org.id}>
+                  {org.companyName || org.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {/* 4. DEPARTMENT */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              select
+              label="Target Department"
+              value={departmentId}
+              onChange={(e) => setDepartmentId(Number(e.target.value))}
+              fullWidth
+            >
+              <MenuItem value="">-- Select Department --</MenuItem>
+              {departments.map((dept) => (
+                <MenuItem key={dept.id} value={dept.id}>
+                  {dept.name} ({dept.code || 'DEPT'})
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {/* 5. PROJECT */}
           <Grid item xs={12} sm={6}>
             <TextField
               select
@@ -177,7 +233,7 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
             </TextField>
           </Grid>
 
-          {/* 4. TEAM */}
+          {/* 6. TEAM */}
           <Grid item xs={12} sm={6}>
             <TextField
               select
@@ -195,7 +251,7 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
             </TextField>
           </Grid>
 
-          {/* 5. VIDEO LINK */}
+          {/* 7. VIDEO LINK */}
           <Grid item xs={12} sm={6}>
             <TextField
               label="Video Room URL"
@@ -206,7 +262,7 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
             />
           </Grid>
 
-          {/* 6. DATE & TIME */}
+          {/* 8. DATE & TIME */}
           <Grid item xs={12} sm={4}>
             <TextField
               type="date"
@@ -238,7 +294,7 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
             />
           </Grid>
 
-          {/* 7. PARTICIPANTS */}
+          {/* 9. PARTICIPANTS WITH SELECT ALL */}
           <Grid item xs={12}>
             <FormControl fullWidth size="small">
               <InputLabel id="participants-label">Invited Participants</InputLabel>
@@ -295,7 +351,7 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
             </FormControl>
           </Grid>
 
-          {/* 8. AGENDA */}
+          {/* 10. AGENDA */}
           <Grid item xs={12}>
             <TextField
               multiline
