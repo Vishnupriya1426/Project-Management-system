@@ -95,6 +95,9 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
       .then((res) => {
         if (res.data?.data && Array.isArray(res.data.data)) {
           setOrganizations(res.data.data);
+          if (res.data.data.length > 0 && !selectedOrg) {
+            setSelectedOrg(res.data.data[0].companyName || res.data.data[0].name);
+          }
         }
       })
       .catch(() => setOrganizations([]));
@@ -103,6 +106,9 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
       .then((res) => {
         if (res.data?.data && Array.isArray(res.data.data)) {
           setDepartments(res.data.data);
+          if (res.data.data.length > 0 && !selectedDept) {
+            setSelectedDept(res.data.data[0].name);
+          }
         }
       })
       .catch(() => setDepartments([]));
@@ -111,6 +117,9 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
       .then((res) => {
         if (res.data?.data && Array.isArray(res.data.data)) {
           setTeams(res.data.data);
+          if (res.data.data.length > 0 && !selectedTeam) {
+            setSelectedTeam(res.data.data[0].name);
+          }
         }
       })
       .catch(() => setTeams([]));
@@ -119,20 +128,24 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
       .then((res) => {
         if (res.data?.data && Array.isArray(res.data.data)) {
           setProjects(res.data.data);
+          if (res.data.data.length > 0 && !selectedProject) {
+            setSelectedProject(res.data.data[0].title || res.data.data[0].name);
+          }
         }
       })
       .catch(() => setProjects([]));
 
-    api.get('/employees')
+    api.get('/employees?size=100')
       .then((res) => {
-        if (res.data?.data && Array.isArray(res.data.data)) {
-          const apiParticipants: Participant[] = res.data.data.map((e: any) => ({
+        const raw = res.data?.data?.content || res.data?.data;
+        if (Array.isArray(raw)) {
+          const apiParticipants: Participant[] = raw.map((e: any) => ({
             id: e.id,
-            name: `${e.firstName} ${e.lastName}`,
-            role: e.user?.role?.name || 'ROLE_EMPLOYEE',
+            name: `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim(),
+            role: e.designation || e.user?.role?.name || 'ROLE_EMPLOYEE',
             department: e.department?.name || 'Engineering',
-            email: e.user?.email || `${e.firstName.toLowerCase()}@spems.com`,
-            avatar: e.firstName.charAt(0).toUpperCase(),
+            email: e.user?.email || `${e.firstName ? e.firstName.toLowerCase() : 'user'}@spems.com`,
+            avatar: e.firstName ? e.firstName.charAt(0).toUpperCase() : 'E',
             status: 'Available',
           }));
           setAllEmployees(apiParticipants);
