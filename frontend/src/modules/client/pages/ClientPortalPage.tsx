@@ -149,14 +149,18 @@ export const ClientPortalPage: React.FC = () => {
       })
       .catch(() => setTickets([]));
 
-    api.get('/meetings')
+    // Fetch meetings filtered for this client
+    const meetingsUrl = clientProfile?.id
+      ? `/meetings/client/${clientProfile.id}`
+      : '/meetings';
+    api.get(meetingsUrl)
       .then((res) => {
         if (res.data?.data && Array.isArray(res.data.data)) {
           setMeetings(res.data.data);
         }
       })
       .catch(() => setMeetings([]));
-  }, [clientOrgName]);
+  }, [clientOrgName, clientProfile?.id]);
 
   // Derived Metrics
   const totalProjects = projects.length;
@@ -567,31 +571,79 @@ export const ClientPortalPage: React.FC = () => {
           <Grid container spacing={2}>
             {meetings.map((mtg) => (
               <Grid item xs={12} md={6} key={mtg.id}>
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
-                    {mtg.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {mtg.agenda}
-                  </Typography>
-                  <Typography variant="caption" display="block" sx={{ fontWeight: 700 }}>
-                    📅 Date: {mtg.date} | {mtg.time}
-                  </Typography>
-                  <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 2 }}>
-                    Organizer: {mtg.organizer}
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    size="small"
-                    startIcon={<VideoCallIcon />}
-                    component="a"
-                    href={mtg.videoLink}
-                    target="_blank"
-                    sx={{ fontWeight: 700 }}
-                  >
-                    Join Meeting Call
-                  </Button>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 3, borderTop: '4px solid #0078D4' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                    <Box sx={{ flexGrow: 1, pr: 1 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main' }}>
+                        {mtg.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {mtg.meetingType || 'General Sync'}
+                      </Typography>
+                    </Box>
+                    <Chip
+                      label={mtg.status || 'SCHEDULED'}
+                      color={mtg.status === 'COMPLETED' ? 'default' : mtg.status === 'CANCELLED' ? 'error' : 'success'}
+                      size="small"
+                      sx={{ fontWeight: 700, flexShrink: 0 }}
+                    />
+                  </Box>
+
+                  {mtg.agenda && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                      {mtg.agenda}
+                    </Typography>
+                  )}
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 2 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                      📅 {mtg.meetingDate || 'Date TBD'} &nbsp;|&nbsp; 🕐 {mtg.startTime || '--:--'}{mtg.endTime ? ` – ${mtg.endTime}` : ''}
+                    </Typography>
+                    {mtg.projectName && (
+                      <Typography variant="caption" color="text.secondary">
+                        🗂 Project: <strong>{mtg.projectName}</strong>
+                      </Typography>
+                    )}
+                    {mtg.locationType && (
+                      <Typography variant="caption" color="text.secondary">
+                        📍 {mtg.locationType}{mtg.buildingRoom ? ` — ${mtg.buildingRoom}` : ''}
+                      </Typography>
+                    )}
+                    {mtg.durationMinutes && (
+                      <Typography variant="caption" color="text.secondary">
+                        ⏱ Duration: {mtg.durationMinutes} min
+                      </Typography>
+                    )}
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    {mtg.meetingUrl ? (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        startIcon={<VideoCallIcon />}
+                        component="a"
+                        href={mtg.meetingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ fontWeight: 700 }}
+                      >
+                        Join Meeting
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        startIcon={<VideoCallIcon />}
+                        disabled
+                        sx={{ fontWeight: 700 }}
+                      >
+                        Link Pending
+                      </Button>
+                    )}
+                  </Box>
                 </Paper>
               </Grid>
             ))}
@@ -602,8 +654,8 @@ export const ClientPortalPage: React.FC = () => {
             <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
               No Scheduled Meetings Currently
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Project review calls, Sprint Demos, and Steering Committee meetings will be scheduled here with video conference links.
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Project review calls, Sprint Demos, and Steering Committee meetings scheduled for your account will appear here with live video conference join links.
             </Typography>
           </Paper>
         )}
