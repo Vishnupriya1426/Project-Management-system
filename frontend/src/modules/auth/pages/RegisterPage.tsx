@@ -27,13 +27,42 @@ export const RegisterPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validate = () => {
+    if (!firstName || !firstName.trim()) {
+      setError('First Name is required');
+      return false;
+    }
+    if (!lastName || !lastName.trim()) {
+      setError('Last Name is required');
+      return false;
+    }
+    if (!email || !email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    if (!password) {
+      setError('Password is required');
+      return false;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
+    if (!validate()) return;
     setLoading(true);
 
     try {

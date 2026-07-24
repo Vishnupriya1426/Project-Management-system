@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -26,21 +26,35 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('Admin@123');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const prefill = localStorage.getItem('loginEmailPrefill');
-    if (prefill) {
-      setEmail(prefill);
-      setPassword('');
-      localStorage.removeItem('loginEmailPrefill');
+  const validate = () => {
+    let valid = true;
+    setEmailError('');
+    setPasswordError('');
+
+    if (!email || !email.trim()) {
+      setEmailError('Corporate Email is required');
+      valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setEmailError('Please enter a valid email address');
+      valid = false;
     }
-  }, []);
+
+    if (!password) {
+      setPasswordError('Password is required');
+      valid = false;
+    }
+    return valid;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!validate()) return;
     setLoading(true);
 
     try {
@@ -80,14 +94,19 @@ export const LoginPage: React.FC = () => {
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <TextField
               fullWidth
               label="Corporate / Registered Email *"
               variant="outlined"
               margin="normal"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError('');
+              }}
+              error={Boolean(emailError)}
+              helperText={emailError}
               required
               InputProps={{
                 startAdornment: (
@@ -105,7 +124,12 @@ export const LoginPage: React.FC = () => {
               variant="outlined"
               margin="normal"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (passwordError) setPasswordError('');
+              }}
+              error={Boolean(passwordError)}
+              helperText={passwordError}
               required
               InputProps={{
                 startAdornment: (

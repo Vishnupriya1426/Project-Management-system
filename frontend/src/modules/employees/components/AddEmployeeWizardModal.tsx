@@ -126,10 +126,24 @@ export const AddEmployeeWizardModal: React.FC<AddEmployeeWizardModalProps> = ({
     'System Access',
   ];
 
+  const [stepError, setStepError] = useState<string | null>(null);
+
   const handleNext = () => {
-    if (activeStep === 0 && !formData.username) {
-      const generatedUsername = `${formData.firstName.toLowerCase()}.${formData.lastName.toLowerCase()}`;
-      setFormData((prev) => ({ ...prev, username: generatedUsername }));
+    setStepError(null);
+    if (activeStep === 0) {
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        setStepError('First Name and Last Name are required.');
+        return;
+      }
+      if (!formData.username) {
+        const generatedUsername = `${formData.firstName.toLowerCase()}.${formData.lastName.toLowerCase()}`;
+        setFormData((prev) => ({ ...prev, username: generatedUsername }));
+      }
+    } else if (activeStep === 1) {
+      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        setStepError('Please enter a valid email address.');
+        return;
+      }
     }
     setActiveStep((prev) => prev + 1);
   };
@@ -189,6 +203,7 @@ export const AddEmployeeWizardModal: React.FC<AddEmployeeWizardModalProps> = ({
       </DialogTitle>
 
       <DialogContent dividers sx={{ py: 3 }}>
+        {stepError && <Alert severity="error" sx={{ mb: 2 }}>{stepError}</Alert>}
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
           {steps.map((label) => (
             <Step key={label}>

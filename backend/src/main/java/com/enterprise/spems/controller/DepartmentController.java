@@ -40,6 +40,12 @@ public class DepartmentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Department>> createDepartment(@RequestBody Department department, HttpServletRequest request) {
+        if (department.getName() == null || department.getName().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Department Name is required", request.getRequestURI()));
+        }
+        if (department.getCode() == null || department.getCode().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Department Code is required", request.getRequestURI()));
+        }
         if (department.getStatus() == null || department.getStatus().isBlank()) {
             department.setStatus("ACTIVE");
         }

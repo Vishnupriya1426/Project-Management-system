@@ -16,9 +16,15 @@ export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+    setEmailError('');
     setSubmitted(true);
   };
 
@@ -47,7 +53,12 @@ export const ForgotPasswordPage: React.FC = () => {
                 variant="outlined"
                 margin="normal"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError('');
+                }}
+                error={Boolean(emailError)}
+                helperText={emailError}
                 required
                 InputProps={{
                   startAdornment: (

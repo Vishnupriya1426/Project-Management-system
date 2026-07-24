@@ -88,6 +88,9 @@ public class EmployeeController {
         if (newPassword == null || newPassword.isBlank()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Password is required", request.getRequestURI()));
         }
+        if (newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Password must be at least 6 characters long", request.getRequestURI()));
+        }
 
         Employee employee = employeeRepository.findById(id).orElse(null);
         if (employee == null || employee.getUser() == null) {

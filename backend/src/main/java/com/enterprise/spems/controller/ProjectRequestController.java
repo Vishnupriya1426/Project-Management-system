@@ -35,6 +35,12 @@ public class ProjectRequestController {
 
     @PostMapping("/client/project-requests")
     public ResponseEntity<ApiResponse<ProjectProposal>> createProjectRequest(@RequestBody ProjectProposal proposal, HttpServletRequest request) {
+        if (proposal.getTitle() == null || proposal.getTitle().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Project title is required", request.getRequestURI()));
+        }
+        if (proposal.getDescription() == null || proposal.getDescription().trim().length() < 10) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Project description must be at least 10 characters long", request.getRequestURI()));
+        }
         if (proposal.getStatus() == null || proposal.getStatus().isBlank()) {
             proposal.setStatus("PENDING_REVIEW");
         }

@@ -56,8 +56,17 @@ public class ClientController {
             password = "ClientPass@2026!";
         }
 
-        if (email == null || email.isBlank()) {
+        if (companyName == null || companyName.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Company Name is required", request.getRequestURI()));
+        }
+        if (contactPerson == null || contactPerson.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Contact Person is required", request.getRequestURI()));
+        }
+        if (email == null || email.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Corporate Email is required", request.getRequestURI()));
+        }
+        if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid Corporate Email format", request.getRequestURI()));
         }
 
         // 1. Onboard / Create User account with ROLE_CLIENT for Client Portal login
