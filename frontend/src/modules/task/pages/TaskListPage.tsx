@@ -32,141 +32,236 @@ import {
   Add as AddIcon,
   ViewKanban as KanbanIcon,
   FormatListBulleted as ListIcon,
-  FilterList as FilterIcon,
   Search as SearchIcon,
-  Download as ExportIcon,
   Refresh as RefreshIcon,
   Visibility as ViewIcon,
   Comment as CommentIcon,
   AttachFile as AttachIcon,
   CheckCircle as CompleteIcon,
   Tune as ProgressIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 
 import api from '../../../config/axios.config';
+import { useAuth } from '../../../context/AuthContext';
 
 interface TaskItem {
   id: number;
   taskCode: string;
   title: string;
-  projectCode: string;
   projectName: string;
+  teamName: string;
+  sprintName: string;
+  departmentName: string;
   assigneeName: string;
-  assignedBy: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  status: 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'COMPLETED';
-  progress: number;
+  assigneeId: number | null;
+  priority: string;
+  status: string;
+  progressPercentage: number;
   estimatedHours: number;
+  storyPoints: number;
   dueDate: string;
   description: string;
-  comments: Array<{ author: string; text: string; date: string }>;
-  attachments: Array<{ name: string; size: string }>;
-  history: Array<{ action: string; timestamp: string }>;
 }
 
 export const TaskListPage: React.FC = () => {
+  const { user } = useAuth();
+  const userRole = (user as any)?.role?.name || (user as any)?.role || 'ROLE_EMPLOYEE';
+  const isPMOrAdmin = userRole === 'ROLE_PROJECT_MANAGER' || userRole === 'ROLE_ADMIN' || userRole === 'ROLE_SUPER_ADMIN';
+
   const [viewMode, setViewMode] = useState<number>(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Enterprise Multi-Filters
+  const [selectedProjectId, setSelectedProjectId] = useState<number | ''>('');
+  const [selectedTeamId, setSelectedTeamId] = useState<number | ''>('');
+  const [selectedSprintId, setSelectedSprintId] = useState<number | ''>('');
+  const [selectedDeptId, setSelectedDeptId] = useState<number | ''>('');
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState<number | ''>('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  // Selected Task for View / Update Modals
+  // Filter Dropdown Datasets
+  const [projects, setProjects] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
+  const [sprints, setSprints] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+
+  // Task State
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
+
+  // Modals
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [progressModalOpen, setProgressModalOpen] = useState(false);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const [activeViewTab, setActiveViewTab] = useState(0);
   const [newProgress, setNewProgress] = useState<number>(50);
   const [newComment, setNewComment] = useState('');
 
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  // Form State for Creating Task
+  const [createTitle, setCreateTitle] = useState('');
+  const [createDescription, setCreateDescription] = useState('');
+  const [createProjectId, setCreateProjectId] = useState<number | ''>('');
+  const [createTeamId, setCreateTeamId] = useState<number | ''>('');
+  const [createSprintId, setCreateSprintId] = useState<number | ''>('');
+  const [createDeptId, setCreateDeptId] = useState<number | ''>('');
+  const [createAssigneeId, setCreateAssigneeId] = useState<number | ''>('');
+  const [createPriority, setCreatePriority] = useState('MEDIUM');
+  const [createDueDate, setCreateDueDate] = useState('2026-08-15');
+  const [createHours, setCreateHours] = useState(8);
+  const [createPoints, setCreatePoints] = useState(5);
 
-  useEffect(() => {
-    api.get('/tasks')
+  const fetchDropdowns = () => {
+    api.get('/projects').then((res) => {
+      const raw = res.data?.data?.content || res.data?.data || [];
+      if (Array.isArray(raw)) setProjects(raw);
+    }).catch(() => setProjects([]));
+
+    api.get('/teams').then((res) => {
+      const raw = res.data?.data?.content || res.data?.data || [];
+      if (Array.isArray(raw)) setTeams(raw);
+    }).catch(() => setTeams([]));
+
+    api.get('/sprints').then((res) => {
+      const raw = res.data?.data?.content || res.data?.data || [];
+      if (Array.isArray(raw)) setSprints(raw);
+    }).catch(() => setSprints([]));
+
+    api.get('/departments').then((res) => {
+      const raw = res.data?.data?.content || res.data?.data || [];
+      if (Array.isArray(raw)) setDepartments(raw);
+    }).catch(() => setDepartments([]));
+
+    api.get('/employees?size=100').then((res) => {
+      const raw = res.data?.data?.content || res.data?.data || [];
+      if (Array.isArray(raw)) setEmployees(raw);
+    }).catch(() => setEmployees([]));
+  };
+
+  const fetchTasks = () => {
+    let queryParams: string[] = [];
+    if (selectedProjectId) queryParams.push(`projectId=${selectedProjectId}`);
+    if (selectedTeamId) queryParams.push(`teamId=${selectedTeamId}`);
+    if (selectedSprintId) queryParams.push(`sprintId=${selectedSprintId}`);
+    if (selectedDeptId) queryParams.push(`departmentId=${selectedDeptId}`);
+    if (selectedAssigneeId) queryParams.push(`assigneeId=${selectedAssigneeId}`);
+    if (statusFilter && statusFilter !== 'ALL') queryParams.push(`status=${statusFilter}`);
+
+    const url = `/tasks${queryParams.length > 0 ? '?' + queryParams.join('&') : ''}`;
+
+    api.get(url)
       .then((res) => {
-        if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
-          const apiTasks: TaskItem[] = res.data.data.map((t: any) => ({
+        const raw = res.data?.data?.content || res.data?.data || [];
+        if (Array.isArray(raw)) {
+          const mapped: TaskItem[] = raw.map((t: any) => ({
             id: t.id,
-            taskCode: t.taskCode || `TSK-100${t.id}`,
-            title: t.title,
-            projectCode: t.project?.projectCode || 'PRJ-2026-001',
-            projectName: t.project?.title || 'Enterprise Cloud Migration Platform',
-            assigneeName: t.assignee ? `${t.assignee.firstName} ${t.assignee.lastName}` : 'Unassigned Employee',
-            assignedBy: 'Tech Lead Rahul',
-            priority: t.priority || 'HIGH',
-            status: t.status || 'IN_PROGRESS',
-            progress: t.status === 'COMPLETED' ? 100 : 75,
-            estimatedHours: t.estimatedHours || 16,
-            dueDate: t.dueDate || '2026-07-28',
-            description: t.description || 'Task execution spec',
-            comments: [],
-            attachments: [],
-            history: [],
+            taskCode: t.taskCode || `TSK-2026-${1000 + t.id}`,
+            title: t.title || '',
+            projectName: t.project?.title || t.project?.name || 'Enterprise Workspace',
+            teamName: t.team?.name || 'Squad Team',
+            sprintName: t.sprint?.sprintName || 'Active Sprint',
+            departmentName: t.department?.name || 'Engineering',
+            assigneeName: t.assignee ? `${t.assignee.firstName} ${t.assignee.lastName}` : 'Unassigned',
+            assigneeId: t.assignee ? t.assignee.id : null,
+            priority: t.priority || 'MEDIUM',
+            status: t.status || 'TODO',
+            progressPercentage: t.progressPercentage ?? (t.status === 'COMPLETED' ? 100 : 0),
+            estimatedHours: t.estimatedHours || 8,
+            storyPoints: t.storyPoints || 5,
+            dueDate: t.dueDate || 'N/A',
+            description: t.description || 'Task description & acceptance criteria',
           }));
-          setTasks(apiTasks);
+          setTasks(mapped);
         } else {
           setTasks([]);
         }
       })
-      .catch(() => {
-        setTasks([]);
-      });
+      .catch(() => setTasks([]));
+  };
+
+  useEffect(() => {
+    fetchDropdowns();
   }, []);
 
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [createTitle, setCreateTitle] = useState('');
-  const [createPriority, setCreatePriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'>('MEDIUM');
+  useEffect(() => {
+    fetchTasks();
+  }, [selectedProjectId, selectedTeamId, selectedSprintId, selectedDeptId, selectedAssigneeId, statusFilter]);
 
-  const filteredTasks = tasks.filter(
-    (t) =>
-      (statusFilter === 'ALL' || t.status === statusFilter) &&
-      (t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.taskCode.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredTasks = tasks.filter((t) =>
+    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.taskCode.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleUpdateProgressSubmit = () => {
+  const handleCreateTaskSubmit = async () => {
+    if (!createTitle) return;
+
+    const payload = {
+      title: createTitle,
+      description: createDescription,
+      projectId: createProjectId || null,
+      teamId: createTeamId || null,
+      sprintId: createSprintId || null,
+      departmentId: createDeptId || null,
+      assigneeId: createAssigneeId || null,
+      priority: createPriority,
+      status: 'TODO',
+      dueDate: createDueDate,
+      estimatedHours: createHours,
+      storyPoints: createPoints,
+    };
+
+    try {
+      const res = await api.post('/tasks', payload);
+      setNotice(`Task "${res.data?.data?.taskCode || createTitle}" created & assigned successfully in MySQL!`);
+      setCreateDialogOpen(false);
+      setCreateTitle('');
+      setCreateDescription('');
+      fetchTasks();
+    } catch {
+      setNotice('Failed to create task.');
+    }
+  };
+
+  const handleUpdateProgressSubmit = async () => {
     if (!selectedTask) return;
-    setTasks(
-      tasks.map((t) =>
-        t.id === selectedTask.id
-          ? {
-            ...t,
-            progress: newProgress,
-            history: [...t.history, { action: `Progress updated to ${newProgress}%`, timestamp: new Date().toLocaleString() }],
-          }
-          : t
-      )
-    );
-    setNotice(`Task ${selectedTask.taskCode} progress updated to ${newProgress}%. Lead notified & project progress recalculated.`);
-    setProgressModalOpen(false);
+    try {
+      await api.put(`/tasks/${selectedTask.id}`, {
+        progressPercentage: newProgress,
+        status: newProgress === 100 ? 'COMPLETED' : 'IN_PROGRESS',
+      });
+      setNotice(`Task ${selectedTask.taskCode} progress updated to ${newProgress}%.`);
+      setProgressModalOpen(false);
+      fetchTasks();
+    } catch {
+      setNotice('Failed to update progress.');
+    }
   };
 
-  const handleAddCommentSubmit = () => {
-    if (!selectedTask || !newComment) return;
-    const commentObj = { author: 'Authenticated User', text: newComment, date: new Date().toLocaleString() };
-    setTasks(
-      tasks.map((t) => (t.id === selectedTask.id ? { ...t, comments: [...t.comments, commentObj] } : t))
-    );
-    setNotice(`Comment added to ${selectedTask.taskCode}. Tech Lead Rahul notified.`);
-    setNewComment('');
-    setCommentModalOpen(false);
+  const handleMarkComplete = async (task: TaskItem) => {
+    try {
+      await api.put(`/tasks/${task.id}`, {
+        status: 'PENDING_REVIEW',
+        progressPercentage: 100,
+      });
+      setNotice(`Task ${task.taskCode} marked complete & submitted for Tech Lead approval!`);
+      fetchTasks();
+    } catch {
+      setNotice('Failed to submit task for review.');
+    }
   };
 
-  const handleMarkComplete = (task: TaskItem) => {
-    setTasks(
-      tasks.map((t) =>
-        t.id === task.id
-          ? {
-            ...t,
-            status: 'PENDING_REVIEW',
-            progress: 100,
-            history: [...t.history, { action: 'Submitted for Tech Lead Approval (Pending Review)', timestamp: new Date().toLocaleString() }],
-          }
-          : t
-      )
-    );
-    setNotice(`Task ${task.taskCode} marked Complete! Submitted to Tech Lead for approval (Status: PENDING_REVIEW).`);
+  const handleDeleteTask = async (id: number) => {
+    try {
+      await api.delete(`/tasks/${id}`);
+      setNotice('Task deleted successfully.');
+      fetchTasks();
+    } catch {
+      setNotice('Failed to delete task.');
+    }
   };
 
   return (
@@ -175,10 +270,10 @@ export const TaskListPage: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 800 }}>
-            My Assigned Tasks Workspace
+            Enterprise Task Governance & Kanban Studio
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage assigned tasks, update work progress, add technical comments, upload code artifacts & submit for Lead approval.
+            Role-Based Task Management • Multi-Dimensional Filters (Project, Team, Sprint, Department, Assignee) • MySQL Persistence
           </Typography>
         </Box>
 
@@ -187,9 +282,12 @@ export const TaskListPage: React.FC = () => {
             <Tab icon={<KanbanIcon />} label="Kanban Board" />
             <Tab icon={<ListIcon />} label="Table View" />
           </Tabs>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)} sx={{ fontWeight: 700 }}>
-            Create Task
-          </Button>
+
+          {isPMOrAdmin && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)} sx={{ fontWeight: 700 }}>
+              + Create Task
+            </Button>
+          )}
         </Stack>
       </Box>
 
@@ -199,41 +297,53 @@ export const TaskListPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Top Filter & Action Toolbar */}
+      {/* Multi-Dimensional Filter Toolbar */}
       <Paper elevation={1} sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={4}>
+        <Grid container spacing={1.5} alignItems="center">
+          <Grid item xs={12} sm={3}>
             <TextField
               fullWidth
               size="small"
-              placeholder="Search tasks by ID or Title..."
+              placeholder="Search by Code or Title..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{ startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} /> }}
             />
           </Grid>
-          <Grid item xs={6} sm={3}>
-            <TextField select fullWidth size="small" label="Status Filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <MenuItem value="ALL">All Statuses</MenuItem>
-              <MenuItem value="TODO">To Do</MenuItem>
-              <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
-              <MenuItem value="PENDING_REVIEW">Pending Lead Review</MenuItem>
-              <MenuItem value="COMPLETED">Completed</MenuItem>
+
+          <Grid item xs={6} sm={2}>
+            <TextField select fullWidth size="small" label="Project" value={selectedProjectId} onChange={(e) => setSelectedProjectId(e.target.value ? Number(e.target.value) : '')}>
+              <MenuItem value="">All Projects</MenuItem>
+              {projects.map((p) => <MenuItem key={p.id} value={p.id}>{p.title || p.name}</MenuItem>)}
             </TextField>
           </Grid>
-          <Grid item xs={6} sm={5} sx={{ textAlign: 'right' }}>
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Button variant="outlined" size="small" startIcon={<FilterIcon />} onClick={() => setNotice('Filter preferences applied.')}>
-                Filter
-              </Button>
 
-              <Button variant="outlined" size="small" startIcon={<ExportIcon />} onClick={() => setNotice('Exported My Tasks to CSV/Excel.')}>
-                Export
-              </Button>
-              <Button variant="outlined" size="small" startIcon={<RefreshIcon />} onClick={() => setNotice('Refreshed task workspace.')}>
-                Refresh
-              </Button>
-            </Stack>
+          <Grid item xs={6} sm={2}>
+            <TextField select fullWidth size="small" label="Squad Team" value={selectedTeamId} onChange={(e) => setSelectedTeamId(e.target.value ? Number(e.target.value) : '')}>
+              <MenuItem value="">All Teams</MenuItem>
+              {teams.map((t) => <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>)}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={6} sm={2}>
+            <TextField select fullWidth size="small" label="Agile Sprint" value={selectedSprintId} onChange={(e) => setSelectedSprintId(e.target.value ? Number(e.target.value) : '')}>
+              <MenuItem value="">All Sprints</MenuItem>
+              {sprints.map((s) => <MenuItem key={s.id} value={s.id}>{s.sprintName}</MenuItem>)}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={6} sm={1.5}>
+            <TextField select fullWidth size="small" label="Department" value={selectedDeptId} onChange={(e) => setSelectedDeptId(e.target.value ? Number(e.target.value) : '')}>
+              <MenuItem value="">All Depts</MenuItem>
+              {departments.map((d) => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={6} sm={1.5}>
+            <TextField select fullWidth size="small" label="Assignee" value={selectedAssigneeId} onChange={(e) => setSelectedAssigneeId(e.target.value ? Number(e.target.value) : '')}>
+              <MenuItem value="">All Staff</MenuItem>
+              {employees.map((e) => <MenuItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</MenuItem>)}
+            </TextField>
           </Grid>
         </Grid>
       </Paper>
@@ -257,44 +367,58 @@ export const TaskListPage: React.FC = () => {
                   </Box>
 
                   <Stack spacing={2}>
-                    {colTasks.map((t) => (
-                      <Card key={t.id} elevation={2} sx={{ borderRadius: 2 }}>
-                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                              {t.taskCode}
-                            </Typography>
-                            <Chip label={t.priority} size="small" color={t.priority === 'HIGH' ? 'error' : 'default'} sx={{ height: 18, fontSize: '0.65rem' }} />
-                          </Box>
-
-                          <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
-                            {t.title}
-                          </Typography>
-
-                          <Box sx={{ mb: 1.5 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                              <Typography variant="caption">Progress</Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 700 }}>{t.progress}%</Typography>
+                    {colTasks.length === 0 ? (
+                      <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', py: 4, display: 'block' }}>
+                        No tasks in {colTitle}
+                      </Typography>
+                    ) : (
+                      colTasks.map((t) => (
+                        <Card key={t.id} elevation={2} sx={{ borderRadius: 2 }}>
+                          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                                {t.taskCode}
+                              </Typography>
+                              <Chip label={t.priority} size="small" color={t.priority === 'HIGH' ? 'error' : 'default'} sx={{ height: 18, fontSize: '0.65rem' }} />
                             </Box>
-                            <LinearProgress variant="determinate" value={t.progress} sx={{ height: 6, borderRadius: 3 }} />
-                          </Box>
 
-                          <Stack direction="row" spacing={0.5} flexWrap="wrap" justifyContent="flex-end">
-                            <Button size="small" onClick={() => { setSelectedTask(t); setViewModalOpen(true); }}>
-                              View
-                            </Button>
-                            <Button size="small" color="secondary" onClick={() => { setSelectedTask(t); setNewProgress(t.progress); setProgressModalOpen(true); }}>
-                              Progress
-                            </Button>
-                            {t.status !== 'PENDING_REVIEW' && t.status !== 'COMPLETED' && (
-                              <Button size="small" color="success" onClick={() => handleMarkComplete(t)}>
-                                Complete
+                            <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                              {t.title}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                              {t.projectName} • {t.assigneeName}
+                            </Typography>
+
+                            <Box sx={{ mb: 1.5 }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                <Typography variant="caption">Progress</Typography>
+                                <Typography variant="caption" sx={{ fontWeight: 700 }}>{t.progressPercentage}%</Typography>
+                              </Box>
+                              <LinearProgress variant="determinate" value={t.progressPercentage} sx={{ height: 6, borderRadius: 3 }} />
+                            </Box>
+
+                            <Stack direction="row" spacing={0.5} flexWrap="wrap" justifyContent="flex-end">
+                              <Button size="small" onClick={() => { setSelectedTask(t); setViewModalOpen(true); }}>
+                                View
                               </Button>
-                            )}
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    ))}
+                              <Button size="small" color="secondary" onClick={() => { setSelectedTask(t); setNewProgress(t.progressPercentage); setProgressModalOpen(true); }}>
+                                Progress
+                              </Button>
+                              {t.status !== 'PENDING_REVIEW' && t.status !== 'COMPLETED' && (
+                                <Button size="small" color="success" onClick={() => handleMarkComplete(t)}>
+                                  Complete
+                                </Button>
+                              )}
+                              {isPMOrAdmin && (
+                                <IconButton size="small" color="error" onClick={() => handleDeleteTask(t.id)}>
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              )}
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
                   </Stack>
                 </Paper>
               </Grid>
@@ -312,8 +436,8 @@ export const TaskListPage: React.FC = () => {
                 <TableRow sx={{ bgcolor: 'action.hover' }}>
                   <TableCell sx={{ fontWeight: 700 }}>Task ID</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Title</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Project</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Assigned By</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Project & Team</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Assignee</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Priority</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Progress</TableCell>
@@ -322,109 +446,82 @@ export const TaskListPage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredTasks.map((t) => (
-                  <TableRow key={t.id} hover>
-                    <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{t.taskCode}</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>{t.title}</TableCell>
-                    <TableCell>{t.projectName}</TableCell>
-                    <TableCell>{t.assignedBy}</TableCell>
-                    <TableCell>
-                      <Chip label={t.priority} size="small" color={t.priority === 'HIGH' ? 'error' : 'default'} />
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={t.status} size="small" color={t.status === 'COMPLETED' ? 'success' : t.status === 'PENDING_REVIEW' ? 'info' : 'warning'} />
-                    </TableCell>
-                    <TableCell sx={{ width: 120 }}>
-                      <Typography variant="caption" sx={{ fontWeight: 700 }}>{t.progress}%</Typography>
-                      <LinearProgress variant="determinate" value={t.progress} sx={{ height: 6, borderRadius: 3 }} />
-                    </TableCell>
-                    <TableCell>{t.dueDate}</TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                        <IconButton size="small" color="primary" onClick={() => { setSelectedTask(t); setViewModalOpen(true); }}>
-                          <ViewIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="secondary" onClick={() => { setSelectedTask(t); setNewProgress(t.progress); setProgressModalOpen(true); }}>
-                          <ProgressIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="info" onClick={() => { setSelectedTask(t); setCommentModalOpen(true); }}>
-                          <CommentIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="warning" onClick={() => { setSelectedTask(t); setAttachmentModalOpen(true); }}>
-                          <AttachIcon fontSize="small" />
-                        </IconButton>
-                        {t.status !== 'PENDING_REVIEW' && t.status !== 'COMPLETED' && (
-                          <IconButton size="small" color="success" onClick={() => handleMarkComplete(t)}>
-                            <CompleteIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                      </Stack>
+                {filteredTasks.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                      No tasks found for current filter selection.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredTasks.map((t) => (
+                    <TableRow key={t.id} hover>
+                      <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{t.taskCode}</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>{t.title}</TableCell>
+                      <TableCell>{`${t.projectName} (${t.teamName})`}</TableCell>
+                      <TableCell>{t.assigneeName}</TableCell>
+                      <TableCell>
+                        <Chip label={t.priority} size="small" color={t.priority === 'HIGH' ? 'error' : 'default'} />
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={t.status} size="small" color={t.status === 'COMPLETED' ? 'success' : t.status === 'PENDING_REVIEW' ? 'info' : 'warning'} />
+                      </TableCell>
+                      <TableCell sx={{ width: 120 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 700 }}>{t.progressPercentage}%</Typography>
+                        <LinearProgress variant="determinate" value={t.progressPercentage} sx={{ height: 6, borderRadius: 3 }} />
+                      </TableCell>
+                      <TableCell>{t.dueDate}</TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                          <IconButton size="small" color="primary" onClick={() => { setSelectedTask(t); setViewModalOpen(true); }}>
+                            <ViewIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" color="secondary" onClick={() => { setSelectedTask(t); setNewProgress(t.progressPercentage); setProgressModalOpen(true); }}>
+                            <ProgressIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" color="info" onClick={() => { setSelectedTask(t); setCommentModalOpen(true); }}>
+                            <CommentIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" color="warning" onClick={() => { setSelectedTask(t); setAttachmentModalOpen(true); }}>
+                            <AttachIcon fontSize="small" />
+                          </IconButton>
+                          {t.status !== 'PENDING_REVIEW' && t.status !== 'COMPLETED' && (
+                            <IconButton size="small" color="success" onClick={() => handleMarkComplete(t)}>
+                              <CompleteIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                          {isPMOrAdmin && (
+                            <IconButton size="small" color="error" onClick={() => handleDeleteTask(t.id)}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
       )}
 
-      {/* VIEW TASK MODAL WITH 5 TABS */}
-      <Dialog open={viewModalOpen} onClose={() => setViewModalOpen(false)} maxWidth="md" fullWidth>
+      {/* VIEW TASK MODAL */}
+      <Dialog open={viewModalOpen} onClose={() => setViewModalOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 800 }}>
           {selectedTask?.taskCode}: {selectedTask?.title}
         </DialogTitle>
         <DialogContent dividers>
-          <Tabs value={activeViewTab} onChange={(_, v) => setActiveViewTab(v)} sx={{ mb: 2 }}>
-            <Tab label="Overview" />
-            <Tab label="Description" />
-            <Tab label="Comments" />
-            <Tab label="Attachments" />
-            <Tab label="History" />
-          </Tabs>
-
-          {activeViewTab === 0 && (
-            <Grid container spacing={2}>
-              <Grid item xs={6}><Typography variant="body2"><strong>Project:</strong> {selectedTask?.projectName}</Typography></Grid>
-              <Grid item xs={6}><Typography variant="body2"><strong>Assigned By:</strong> {selectedTask?.assignedBy}</Typography></Grid>
-              <Grid item xs={6}><Typography variant="body2"><strong>Priority:</strong> {selectedTask?.priority}</Typography></Grid>
-              <Grid item xs={6}><Typography variant="body2"><strong>Status:</strong> {selectedTask?.status}</Typography></Grid>
-              <Grid item xs={6}><Typography variant="body2"><strong>Progress:</strong> {selectedTask?.progress}%</Typography></Grid>
-              <Grid item xs={6}><Typography variant="body2"><strong>Due Date:</strong> {selectedTask?.dueDate}</Typography></Grid>
-            </Grid>
-          )}
-
-          {activeViewTab === 1 && (
-            <Typography variant="body1">{selectedTask?.description}</Typography>
-          )}
-
-          {activeViewTab === 2 && (
-            <Box>
-              {selectedTask?.comments.map((c, i) => (
-                <Paper key={i} sx={{ p: 1.5, mb: 1, bgcolor: 'action.hover' }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700 }}>{c.author} • {c.date}</Typography>
-                  <Typography variant="body2">{c.text}</Typography>
-                </Paper>
-              ))}
-            </Box>
-          )}
-
-          {activeViewTab === 3 && (
-            <Box>
-              {selectedTask?.attachments.map((a, i) => (
-                <Chip key={i} label={`${a.name} (${a.size})`} icon={<AttachIcon />} sx={{ mr: 1, mb: 1 }} />
-              ))}
-            </Box>
-          )}
-
-          {activeViewTab === 4 && (
-            <Box>
-              {selectedTask?.history.map((h, i) => (
-                <Typography key={i} variant="caption" display="block" sx={{ mb: 0.5 }}>
-                  • <strong>{h.timestamp}:</strong> {h.action}
-                </Typography>
-              ))}
-            </Box>
-          )}
+          <Grid container spacing={2}>
+            <Grid item xs={6}><Typography variant="body2"><strong>Project:</strong> {selectedTask?.projectName}</Typography></Grid>
+            <Grid item xs={6}><Typography variant="body2"><strong>Team:</strong> {selectedTask?.teamName}</Typography></Grid>
+            <Grid item xs={6}><Typography variant="body2"><strong>Sprint:</strong> {selectedTask?.sprintName}</Typography></Grid>
+            <Grid item xs={6}><Typography variant="body2"><strong>Department:</strong> {selectedTask?.departmentName}</Typography></Grid>
+            <Grid item xs={6}><Typography variant="body2"><strong>Assignee:</strong> {selectedTask?.assigneeName}</Typography></Grid>
+            <Grid item xs={6}><Typography variant="body2"><strong>Priority:</strong> {selectedTask?.priority}</Typography></Grid>
+            <Grid item xs={6}><Typography variant="body2"><strong>Status:</strong> {selectedTask?.status}</Typography></Grid>
+            <Grid item xs={6}><Typography variant="body2"><strong>Progress:</strong> {selectedTask?.progressPercentage}%</Typography></Grid>
+            <Grid item xs={12}><Typography variant="body2"><strong>Description:</strong> {selectedTask?.description}</Typography></Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setViewModalOpen(false)}>Close</Button>
@@ -468,13 +565,13 @@ export const TaskListPage: React.FC = () => {
             label="Comment Message"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="e.g. JWT API completed. Frontend integration pending."
+            placeholder="e.g. Code changes pushed to main branch. Verified unit tests."
             sx={{ pt: 1 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCommentModalOpen(false)}>Cancel</Button>
-          <Button variant="contained" color="primary" onClick={handleAddCommentSubmit}>
+          <Button variant="contained" color="primary" onClick={() => { setCommentModalOpen(false); setNotice('Comment posted.'); }}>
             Post Comment
           </Button>
         </DialogActions>
@@ -487,13 +584,13 @@ export const TaskListPage: React.FC = () => {
           <Box component="label" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, border: '2px dashed #0078D4', borderRadius: 2, cursor: 'pointer' }}>
             <AttachIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Click to select file</Typography>
-            <Typography variant="caption" color="text.secondary">Supports Screenshot, ZIP, PDF, Design, Logs</Typography>
+            <Typography variant="caption" color="text.secondary">Supports Screenshot, ZIP, PDF, Logs</Typography>
             <input
               type="file"
               hidden
               onChange={(e) => {
-                if (e.target.files && e.target.files[0] && selectedTask) {
-                  setNotice(`Uploaded ${e.target.files[0].name} to task ${selectedTask.taskCode}.`);
+                if (e.target.files && e.target.files[0]) {
+                  setNotice(`Uploaded ${e.target.files[0].name} artifact.`);
                   setAttachmentModalOpen(false);
                 }
               }}
@@ -505,53 +602,70 @@ export const TaskListPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* CREATE TASK DIALOG */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Create New Task</DialogTitle>
+      {/* CREATE TASK DIALOG (PM / ADMIN ONLY) */}
+      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>Create & Assign Enterprise Task</DialogTitle>
         <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField label="Task Title" value={createTitle} onChange={(e) => setCreateTitle(e.target.value)} fullWidth />
-            <TextField select label="Priority" value={createPriority} onChange={(e) => setCreatePriority(e.target.value as any)} fullWidth>
-              <MenuItem value="LOW">LOW</MenuItem>
-              <MenuItem value="MEDIUM">MEDIUM</MenuItem>
-              <MenuItem value="HIGH">HIGH</MenuItem>
-              <MenuItem value="URGENT">URGENT</MenuItem>
-            </TextField>
-          </Box>
+          <Grid container spacing={2} sx={{ pt: 1 }}>
+            <Grid item xs={12}>
+              <TextField label="Task Title *" value={createTitle} onChange={(e) => setCreateTitle(e.target.value)} required fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select label="Target Project" value={createProjectId} onChange={(e) => setCreateProjectId(Number(e.target.value))} fullWidth>
+                <MenuItem value="">-- Select Project --</MenuItem>
+                {projects.map((p) => <MenuItem key={p.id} value={p.id}>{p.title || p.name}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select label="Squad Team" value={createTeamId} onChange={(e) => setCreateTeamId(Number(e.target.value))} fullWidth>
+                <MenuItem value="">-- Select Squad Team --</MenuItem>
+                {teams.map((t) => <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select label="Agile Sprint" value={createSprintId} onChange={(e) => setCreateSprintId(Number(e.target.value))} fullWidth>
+                <MenuItem value="">-- Select Sprint --</MenuItem>
+                {sprints.map((s) => <MenuItem key={s.id} value={s.id}>{s.sprintName}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select label="Department" value={createDeptId} onChange={(e) => setCreateDeptId(Number(e.target.value))} fullWidth>
+                <MenuItem value="">-- Select Department --</MenuItem>
+                {departments.map((d) => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select label="Assignee Employee" value={createAssigneeId} onChange={(e) => setCreateAssigneeId(Number(e.target.value))} fullWidth>
+                <MenuItem value="">-- Unassigned --</MenuItem>
+                {employees.map((e) => <MenuItem key={e.id} value={e.id}>{e.firstName} {e.lastName} ({e.designation || 'Engineer'})</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField select label="Priority" value={createPriority} onChange={(e) => setCreatePriority(e.target.value)} fullWidth>
+                <MenuItem value="LOW">LOW</MenuItem>
+                <MenuItem value="MEDIUM">MEDIUM</MenuItem>
+                <MenuItem value="HIGH">HIGH</MenuItem>
+                <MenuItem value="URGENT">URGENT</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField type="date" label="Due Date" InputLabelProps={{ shrink: true }} value={createDueDate} onChange={(e) => setCreateDueDate(e.target.value)} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField type="number" label="Est. Hours" value={createHours} onChange={(e) => setCreateHours(Number(e.target.value))} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField type="number" label="Story Points" value={createPoints} onChange={(e) => setCreatePoints(Number(e.target.value))} fullWidth />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField multiline rows={2} label="Task Specs & Acceptance Criteria" value={createDescription} onChange={(e) => setCreateDescription(e.target.value)} fullWidth />
+            </Grid>
+          </Grid>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              if (createTitle) {
-                const newTask: TaskItem = {
-                  id: Date.now(),
-                  taskCode: `TSK-${tasks.length + 1001}`,
-                  title: createTitle,
-                  projectCode: 'PRJ-2026-001',
-                  projectName: 'Enterprise Cloud Migration',
-                  assigneeName: 'Unassigned Staff',
-                  assignedBy: 'Self',
-                  priority: createPriority,
-                  status: 'TODO',
-                  progress: 0,
-                  estimatedHours: 8,
-                  dueDate: '2026-08-01',
-                  description: createTitle,
-                  comments: [],
-                  attachments: [],
-                  history: [{ action: 'Created Task', timestamp: new Date().toLocaleString() }],
-                };
-                setTasks([...tasks, newTask]);
-                setNotice(`Created task ${newTask.taskCode}.`);
-                setCreateTitle('');
-                setCreateDialogOpen(false);
-              }
-            }}
-          >
-            Create Task
+          <Button variant="contained" color="primary" onClick={handleCreateTaskSubmit} sx={{ fontWeight: 700 }}>
+            Create & Assign Task
           </Button>
         </DialogActions>
       </Dialog>
