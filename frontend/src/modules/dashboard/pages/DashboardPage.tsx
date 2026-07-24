@@ -70,18 +70,35 @@ export const DashboardPage: React.FC = () => {
   const [assignedProjectsList, setAssignedProjectsList] = useState<any[]>([]);
   const [myNotificationsList, setMyNotificationsList] = useState<any[]>([]);
 
+  // Dynamic Recharts & Approvals Stream State (SQL Database real-time data)
+  const [approvals, setApprovals] = useState<any[]>([]);
+  const [projectStatusData, setProjectStatusData] = useState<any[]>([]);
+  const [sprintVelocityData, setSprintVelocityData] = useState<any[]>([]);
+
   useEffect(() => {
     api.get('/dashboard/stats')
       .then((res) => {
-        if (res.data?.data) {
+        const payload = res.data?.data;
+        if (payload) {
+          const s = payload.stats || payload;
           setStats((prev) => ({
             ...prev,
-            totalEmployees: res.data.data.totalEmployees || 0,
-            activeProjects: res.data.data.activeProjects || 0,
-            totalDepartments: res.data.data.totalDepartments || 0,
-            totalClients: res.data.data.totalClients || 0,
-            totalTasks: res.data.data.totalTasks || 0,
+            totalEmployees: s.totalEmployees || 0,
+            activeProjects: s.activeProjects || 0,
+            totalDepartments: s.totalDepartments || 0,
+            totalClients: s.totalClients || 0,
+            totalTasks: s.totalTasks || 0,
           }));
+
+          if (Array.isArray(payload.projectStatusData)) {
+            setProjectStatusData(payload.projectStatusData);
+          }
+          if (Array.isArray(payload.sprintVelocityData)) {
+            setSprintVelocityData(payload.sprintVelocityData);
+          }
+          if (Array.isArray(payload.approvals)) {
+            setApprovals(payload.approvals);
+          }
         }
       })
       .catch((err) => console.warn('Could not fetch dashboard stats:', err?.message));
@@ -150,12 +167,7 @@ export const DashboardPage: React.FC = () => {
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  // Approval Requests Stream (Zero Mock Data)
-  const [approvals, setApprovals] = useState<any[]>([]);
 
-  // Recharts Datasets (Zero Mock Data)
-  const projectStatusData: any[] = [];
-  const sprintVelocityData: any[] = [];
 
   const handleApprove = (detail: string) => {
     setApprovals(approvals.map((a) => (a.detail === detail ? { ...a, status: 'APPROVED' } : a)));
