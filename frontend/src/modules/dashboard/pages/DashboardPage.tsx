@@ -207,10 +207,10 @@ export const DashboardPage: React.FC = () => {
               <Grid item xs={12}>
                 <Chip label="Super Admin Control Center" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                  Welcome Back, Super Administrator 👋
+                  Welcome Back, Super Administrator
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
-                  Today is <strong>Wednesday, 22 July 2026</strong> • Enterprise System Health: <Chip label="99.9% Operational" color="success" size="small" sx={{ fontWeight: 700 }} />
+                  Today is <strong>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong> • Enterprise System Health: <Chip label="99.9% Operational" color="success" size="small" sx={{ fontWeight: 700 }} />
                 </Typography>
               </Grid>
             </Grid>
@@ -280,7 +280,7 @@ export const DashboardPage: React.FC = () => {
               <Grid item xs={12}>
                 <Chip label="Project Manager Control Center" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                  Good Morning, {user?.firstName ? `${user.firstName} ${user.lastName}` : 'Project Manager'} 👋
+                  Good Morning, {user?.firstName ? `${user.firstName} ${user.lastName}` : 'Project Manager'}
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
                   Today's Date: <strong>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong> • Project Delivery Status: <Chip label="All Systems Operational" color="success" size="small" sx={{ fontWeight: 700 }} />
@@ -389,10 +389,10 @@ export const DashboardPage: React.FC = () => {
               <Grid item xs={12}>
                 <Chip label="Engineering Manager Control" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                  Welcome, Engineering Manager 👋
+                  Welcome, Engineering Manager
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
-                  Active Engineering Squads: <strong>8 Teams</strong> • Code Pipeline: <Chip label="Build Passing (88% Coverage)" color="success" size="small" sx={{ fontWeight: 700 }} />
+                  Today's Date: <strong>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong> • Active Squads: <strong>8 Teams</strong> • Code Pipeline: <Chip label="Build Passing (88% Coverage)" color="success" size="small" sx={{ fontWeight: 700 }} />
                 </Typography>
               </Grid>
             </Grid>
@@ -460,10 +460,10 @@ export const DashboardPage: React.FC = () => {
               <Grid item xs={12}>
                 <Chip label="Employee Portal Workspace" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                  Good Morning, {user?.firstName ? `${user.firstName} ${user.lastName}` : 'Team Member'} 👋
+                  Good Morning, {user?.firstName ? `${user.firstName} ${user.lastName}` : 'Team Member'}
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
-                  {user?.role ?? 'Employee'} • Your tasks and project assignments are loaded below
+                  Today's Date: <strong>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong> • {user?.role ?? 'Employee'}
                 </Typography>
               </Grid>
             </Grid>
@@ -638,10 +638,10 @@ export const DashboardPage: React.FC = () => {
               <Grid item xs={12} md={7}>
                 <Chip label="Valued Client Partner Portal" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, mb: 1.5 }} />
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                  Welcome, Global Bank Corp Partner 👋
+                  Welcome, Global Bank Corp Partner
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
-                  Contracted Projects: <strong>3 Active</strong> • Overall Milestone Progress: <Chip label="75% Completed" color="success" size="small" sx={{ fontWeight: 700 }} />
+                  Today's Date: <strong>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong> • Contracted Projects: <strong>3 Active</strong> • Overall Milestone Progress: <Chip label="75% Completed" color="success" size="small" sx={{ fontWeight: 700 }} />
                 </Typography>
               </Grid>
 
