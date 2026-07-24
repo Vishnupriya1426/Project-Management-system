@@ -246,7 +246,18 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
                 labelId="participants-label"
                 multiple
                 value={selectedParticipantIds}
-                onChange={(e) => setSelectedParticipantIds(e.target.value as number[])}
+                onChange={(e) => {
+                  const vals = e.target.value as number[];
+                  if (vals.includes(-1)) {
+                    if (selectedParticipantIds.length === employees.length) {
+                      setSelectedParticipantIds([]);
+                    } else {
+                      setSelectedParticipantIds(employees.map((emp) => emp.id));
+                    }
+                  } else {
+                    setSelectedParticipantIds(vals);
+                  }
+                }}
                 input={<OutlinedInput label="Invited Participants" />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -263,6 +274,18 @@ export const EnterpriseScheduleMeetingModal: React.FC<EnterpriseScheduleMeetingM
                   </Box>
                 )}
               >
+                <MenuItem
+                  value={-1}
+                  sx={{
+                    fontWeight: 700,
+                    color: 'primary.main',
+                    bgcolor: 'action.hover',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  {selectedParticipantIds.length === employees.length ? '✓ Deselect All' : '+ Select All Participants'}
+                </MenuItem>
                 {employees.map((e) => (
                   <MenuItem key={e.id} value={e.id}>
                     {e.firstName} {e.lastName} ({e.designation || 'Engineer'}) - {e.department?.name || 'Engineering'}
