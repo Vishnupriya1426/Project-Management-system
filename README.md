@@ -1,119 +1,309 @@
-# SPEMS Enterprise: Smart Project & Employee Management System
-
-**SPEMS Enterprise** (Smart Project & Employee Management System) is a production-grade, full-stack enterprise web application built using **React 19 (frontend)** with TypeScript, **Spring Boot 3.3.0 (backend)** with Java 21 containerization, and **MySQL 8.4** database persistence.
-
-The application delivers end-to-end enterprise resource planning, agile project delivery, corporate client proposal management, role-based meeting scheduling, multi-factor OTP verification, automated asynchronous email dispatches, dual PDF/CSV reporting, audit logging, and global form validation.
+# SPEMS (Smart Project & Employee Management System)
+### *Enterprise Resource Planning & Agile Collaboration Platform*
 
 ---
 
-## 1. Tech Stack Overview
-
-| Layer | Technology / Library | Description |
-| :--- | :--- | :--- |
-| **Frontend Framework** | React 19, Vite 5, TypeScript 5.2 | High-performance Single Page Application (SPA) with strict type safety. |
-| **Frontend UI & Styling** | Material UI (MUI v5), Emotion | Modular design system supporting dark/light mode toggles and responsive layouts. |
-| **State & Data Querying** | TanStack React Query v5 | Server-state synchronization, caching, and background refetching. |
-| **Form Validation** | React Hook Form v7, Zod v3 | Schema-based validation enforcing real-time client-side inputs across all forms. |
-| **Data Visualization** | Recharts v2 | Interactive analytics charts for dashboard metrics, team workload, and KPI tracking. |
-| **HTTP Client & Routing** | Axios, React Router v6 | Secure API client with automatic JWT bearer interceptors and role-based route guards. |
-| **Backend Framework** | Java 21, Spring Boot 3.3.0 | Enterprise Java framework powering the REST API engine. |
-| **Security & Auth** | Spring Security, JJWT (0.12.5) | Stateless authentication with JWT tokens and Method Security (`@PreAuthorize`). |
-| **Persistence & ORM** | Spring Data JPA, Hibernate | Database access layer with automated schema management and connection pooling. |
-| **Database Engine** | MySQL 8.4 / 8.0 | Relational database persistence with foreign key integrity and schema seeding scripts. |
-| **Reporting & Exports** | Apache POI (5.2.5), OpenPDF / iText | Server-side Excel (`.xlsx`) sheet generation and corporate-branded PDF exports (`/api/v1/reports/pdf`). |
-| **Mail & Notifications** | Spring Boot Mail, Thymeleaf, `@EnableAsync` | Non-blocking asynchronous HTML email dispatches for OTP, approvals, and alerts. |
-| **API Documentation** | Springdoc OpenAPI (Swagger UI v2.5.0) | Interactive REST API testing interface and OpenAPI JSON specification. |
-| **Containerization** | Docker, Docker Compose | Multi-container orchestration (MySQL Database, Spring Boot API, NGINX Web Server). |
-| **Testing & Quality** | JUnit 5, Mockito, Spring Boot Test | Comprehensive unit, integration, and REST controller test suites. |
-
----
-
-## 2. Application Screenshots & Feature Walkthrough
-
-### 2.1 Authentication, Multi-Factor OTP & Access Security
-* **Stateless JWT Authorization**: Users log in to receive a secure JWT token attached via request headers (`Authorization: Bearer <token>`).
-* **Multi-Factor 6-Digit Email OTP**: Registration triggers a 6-digit OTP dispatched via Spring Mail SMTP to verify real user email addresses before granting portal access (`OTPVerificationPage.tsx`).
-* **Enterprise Form Validation**: Real-time email regex matching, password strength checks (min 6 characters), and inline helper text error indicators across all authentication forms (`LoginPage.tsx`, `RegisterPage.tsx`, `ForgotPasswordPage.tsx`, `ResetPasswordPage.tsx`).
-
-### 2.2 Portal Architectures & Specialized Business Personas
-
-#### 2.2.1 Super Admin & Operations Command Center (`ROLE_SUPER_ADMIN`, `ROLE_ADMIN`)
-* **Live System Metrics**: KPI counter cards tracking active corporate projects, total contracted budgets, overall headcount, and active department counts.
-* **Employee Lifecycle Management**: 4-Step Add Employee Wizard (`AddEmployeeWizardModal.tsx`), Edit Employee modal, Department Transfer modal (`TransferDepartmentModal.tsx`), and Project Assignment dialogs (`AssignProjectDialogModal.tsx`).
-* **Corporate Client & Proposal Onboarding**: Client Onboarding dialog, Project Proposal Review Vault (accept/reject proposals, inspect RFP/BRD PDF document attachments, assign designated Project Managers).
-* **Enterprise Department Management**: 5-Step Add Department Wizard (`AddDepartmentWizardModal.tsx`), Assign Head of Department (HOD) modal (`AssignDepartmentHeadModal.tsx`), Edit Department modal (`EditDepartmentModal.tsx`), annual budget tracking, and cost centers.
-* **Compliance & Audit Logging**: Global Audit Trail (`AuditLogListPage.tsx`) logging user activity, timestamps, IP addresses, and operational actions with direct CSV export (`/api/v1/admin/audit-logs/export`).
-
-#### 2.2.2 Head of Department (HOD) Portal (`ROLE_ENG_MANAGER`, `ROLE_HR_MANAGER`)
-* **Department Oversight**: Department-specific budget management, squad capacity tracking, and member performance monitoring.
-* **Timesheet & Work Log Approvals**: Review and approve employee weekly timesheet submissions and daily work hour entries.
-
-#### 2.2.3 Project Delivery & PM Portal (`ROLE_PROJECT_MANAGER`)
-* **Agile Sprint & Backlog Manager**: Create, schedule, and execute sprints with capacity hours, story points, date validation (`endDate >= startDate`), and Kanban board integration (`CreateSprintModal.tsx`).
-* **Milestone Timelines**: Track phase completions, due dates, and milestone owners (`CreateMilestoneModal.tsx`).
-* **Resource Allocation Engine**: Match developers to projects based on primary skill, availability percentage, and workload capacity.
-* **Role-Based Meeting Scheduler**: Schedule role-restricted meetings with Google Meet / Teams links, dynamic participant multi-selection, and time validation (`endTime > startTime`) (`EnterpriseScheduleMeetingModal.tsx`).
-
-#### 2.2.4 Employee Workspace (`ROLE_EMPLOYEE`, `ROLE_TEAM_LEAD`, `ROLE_SR_DEVELOPER`)
-* **My Task Board**: Status lifecycle management (`PENDING` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `COMPLETED`), priority flags (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), and deadline countdowns.
-* **Timesheet & Work Hours Record**: Log daily task hours with strict validation (0.5 to 24 hours per day) and submit weekly timesheets for Tech Lead and PM approval (`TimesheetPage.tsx`).
-* **Issue & Bug Escalation**: Report production bugs and technical queries (`IssueListPage.tsx`).
-
-#### 2.2.5 Corporate Client Portal (`ROLE_CLIENT`)
-* **Client Portal Dashboard**: High-level visual metrics detailing active project progress, budget consumption, and delivery milestones.
-* **Project Proposal Submission**: Proposal Request Wizard allowing clients to submit project titles, target budgets, expected start dates, and multi-document specs (RFP, BRD, SOW file attachments) (`RequestProjectModal.tsx`).
-* **Dynamic Meetings Hub**: View scheduled syncs with Project Managers and technical leads with 1-click Join links.
-* **Support Ticket Escalation**: Raise support tickets and production incident alerts directly to assigned Project Managers (`RaiseSupportTicketModal.tsx`).
-
-### 2.3 Reporting & Data Export Engine
-* **Excel Data Sheets**: Structured Excel-compatible CSV exports for Audit Logs, Employees, Projects, and Timesheets.
-* **Executive PDF Exporter**: Server-side branded PDF document generation featuring custom headers, system metrics, and formatted data tables (`/api/v1/reports/pdf?title=...`).
-
-### 2.4 Asynchronous HTML Email Notifications
-* **Non-Blocking Execution**: Outbox mailing is executed asynchronously via Spring Boot's `@EnableAsync` thread pool, ensuring zero UI blocking during email dispatch.
+##  Table of Contents
+1. [Project Banner & Introduction](#-spems-smart-project--employee-management-system)
+2. [Why SPEMS? Business Problem & Solution](#-why-spems)
+3. [Key Highlights](#-key-highlights)
+4. [Detailed Features Checklist](#-detailed-features-checklist)
+5. [Enterprise Portals & Personas](#-enterprise-portals--personas)
+6. [System Architecture & Lifecycle Flows](#-system-architecture--lifecycle-flows)
+    * [High-Level System Architecture](#1-high-level-system-architecture)
+    * [End-to-End API Request Lifecycle](#2-end-to-end-api-request-lifecycle)
+    * [Authentication & Authorization State Flow](#3-authentication--authorization-state-flow)
+    * [Employee Management Lifecycle](#4-employee-management-lifecycle)
+    * [Project Lifecycle & PM Assignment](#5-project-lifecycle--pm-assignment)
+    * [Task, Sprint, & Milestone Delivery Lifecycle](#6-task-sprint--milestone-delivery-lifecycle)
+7. [Technology Stack](#-technology-stack)
+8. [Project Modules Deep Dive](#-project-modules-deep-dive)
+9. [Enterprise Workflow Operations](#-enterprise-workflow-operations)
+10. [Database Design & ER Schema](#-database-design--er-schema)
+11. [Folder Structure](#-folder-structure)
+12. [Installation Guide (Local Dev)](#-installation-guide)
+13. [Docker Compose Deployment](#-docker-compose-deployment)
+14. [Environment Variables Reference](#-environment-variables)
+15. [API Overview & Documentation Catalog](#-api-overview--documentation-catalog)
+16. [Demo & Sandbox Credentials](#-demo--sandbox-credentials)
+17. [Postman Collection Setup](#-postman-collection-setup)
+18. [Unit & Integration Testing Suite](#-unit--integration-testing-suite)
+19. [Security & Performance Engineering](#-security--performance-engineering)
+20. [Software Engineering Best Practices](#-software-engineering-best-practices)
+21. [Screenshots & Visual Placeholders](#-screenshots--visual-placeholders)
+22. [Future Roadmap](#-future-roadmap)
+23. [Contributors, Support & License](#-contributors-support--license)
 
 ---
 
-## 3. System Flowcharts & Diagrams
+##  Why SPEMS?
 
-### 3.1 High-Level Architecture Flowchart
-```mermaid
-graph TD
-    A["Client UI (React 19 + TypeScript + MUI)"] -- "HTTPS / REST API" --> B["Nginx Reverse Proxy (Port 80)"]
-    B -- "/api/v1/*" --> C["Spring Boot REST Engine (Port 8080)"]
-    C --> D["Spring Security & JwtAuthenticationFilter"]
-    D --> E["GlobalExceptionHandler & Controllers"]
-    E --> F["Services & Business Logic Layer"]
-    F -- "JPA / Hibernate SQL" --> G["MySQL 8.4 Database (Port 3306)"]
-    F -- "Async HTML Mail (@EnableAsync)" --> H["SMTP Server (Gmail / Mailtrap)"]
-    F -- "File Stream Write" --> I["Local Disk Uploads (/app/uploads)"]
+### The Business Problem
+In modern enterprise environments, managing multi-disciplinary engineering squads, tracking sprint capacities, maintaining transparent client communication, and monitoring financial budgets often require using fragmented tools (Jira, Excel, Email, Google Drive, Slack). This fragment leads to:
+* **Information Silos**: PMs lack live capacity visibility; HODs cannot track cross-project resource utilization.
+* **Security & Auditing Gaps**: Sensitive client proposals and financial budgets are stored insecurely, with no logs of who accessed or modified them.
+* **Inefficient Client Collaboration**: Clients lack direct visibility into active project timelines, sprint delivery progress, and project documents.
+
+### The Solution
+**SPEMS (Smart Project & Employee Management System)** consolidates resource allocation, project tracking, and client interaction into a single, cohesive, role-governed platform. It streamlines business operations with:
+* Real-time sprint capacity planning.
+* Granular role-based access control (RBAC) across five specialized portals.
+* Document management with upload verification.
+* Live enterprise dashboard analytics and on-demand Excel/PDF financial reporting.
+
+---
+
+## Key Highlights
+* **Clean SPA Architecture**: React 19 single-page application built with Vite and TypeScript, featuring Material UI (MUI v5) and Emotion-styled layouts.
+* **Robust Spring Boot Backend**: Clean DDD (Domain-Driven Design) architecture with REST endpoints, Spring Security, Hibernate ORM, and Spring Data JPA.
+* **Stateless Security**: Custom JWT filters for user authentication, method-level authorization annotation, and encrypted user credentials.
+* **Asynchronous Notifications**: Outbox email notifications dispatched asynchronously using Spring Boot's task execution pool.
+* **Database Persisted Audit Logging**: Built-in system logging tracking critical actions (logins, deletions, edits) with client IP mapping.
+
+---
+
+##  Detailed Features Checklist
+
+*   **🔒 Authentication & Access Control**
+    *   *Stateless Security:* Implementation of custom JWT authentication filters that map users to distinct security permissions.
+    *   *Role-based Security (RBAC):* Secured via method-level `@PreAuthorize` security annotations.
+    *   *MFA/OTP Security:* Multi-factor signup validation using 6-digit email verification codes.
+    *   *Theme Preference Persistence:* Global light and dark mode toggles with immediate MUI palette updating.
+
+*   **📁 Client Portal & Proposals**
+    *   *Proposal Wizard:* A multi-step proposal form allowing corporate clients to submit RFPs, BRDs, estimated budgets, platform requirements, and compliance checklists.
+    *   *Status Tracking:* Clients track proposal review status progression from `PENDING_REVIEW` to `APPROVED` or `REJECTED`.
+    *   *Document Vault:* Secure uploads and downloads of project agreements, design architectures, and user documentation.
+
+*   **📅 Agile Sprint & Backlog Board**
+    *   *Sprint Planning:* Allows managers to create sprint iterations, set story point capacity goals, and assign granular tasks to team members.
+    *   *Interactive Task Board:* Developers and managers use a central board to drag and drop tasks from TODO to COMPLETED.
+    *   *Time & Work Logs:* Users can log daily timesheet hours spent on individual tasks.
+    *   *Validation Engine:* Checks that sprint schedules stay within project timelines.
+
+*   **📊 Financial & Progress Reporting**
+    *   *Excel Data Exporters:* Generates structured, downloadable Excel spreadsheets (`.xlsx`) of projects and tasks using Apache POI.
+    *   *Corporate PDF Exporter:* Generates corporate-branded PDF documents of project progress using Apache PDFBox.
+
+*   **📬 Outbox Notification Engine**
+    *   *Asynchronous Delivery:* Sends styled HTML email notifications for account creation, OTP verification, and status updates.
+    *   *SMTP Performance:* Outbox mailing is delegated to Spring Boot's task execution pool using `@Async`, preventing main thread blocking.
+
+---
+
+## 👥 Enterprise Portals & Personas
+
+SPEMS uses standard RBAC to adapt its dashboard interface and API access levels based on the logged-in user's role:
+
+```
+[System User]
+   │
+   ├──► ROLE_SUPER_ADMIN (Operations Command Center)
+   │     └── Complete CRUD on users, roles, system metrics, and audit logs.
+   │
+   ├──► ROLE_ENG_MANAGER / ROLE_HR_MANAGER (HOD Portal)
+   │     └── Departmental budgets, resource capacities, and timesheet approvals.
+   │
+   ├──► ROLE_PROJECT_MANAGER (Project Delivery Portal)
+   │     └── Project milestones, sprint boards, risks, and task assignments.
+   │
+   ├──► ROLE_EMPLOYEE (Developer/QA Workspace)
+   │     └── My Tasks, personal timesheet logging, and project calendar.
+   │
+   └──► ROLE_CLIENT (Client Collaboration Portal)
+         └── Submit project proposals, upload specs, and view sprint progress charts.
 ```
 
-### 3.2 Database Entity-Relationship (ER) Diagram
+---
+
+## 🏗️ System Architecture & Lifecycle Flows
+
+### 1. High-Level System Architecture
+SPEMS follows a multi-tier, decoupled architecture designed for high availability and modular deployment:
+
+```mermaid
+graph TD
+    A["React 19 SPA (Client UI)"] -- "HTTPS / Fetch API" --> B["Nginx Reverse Proxy (Port 80)"]
+    B -- "/api/v1/*" --> C["Spring Boot API Engine (Port 8080)"]
+    C --> D["Spring Security & JWT Filter"]
+    D --> E["REST Controller Layer"]
+    E --> F["Service & Transaction Layer"]
+    F -- "SQL Queries" --> G["MySQL 8.0 Persistence (Port 3306)"]
+    F -- "Async Email Thread" --> H["SMTP Server (Gmail/Mailtrap)"]
+    F -- "Disk File Write" --> I["Uploads Vault (/app/uploads)"]
+```
+
+### 2. End-to-End API Request Lifecycle
+The diagram below illustrates the path of a secure API request from the Client to the Persistence layer and back:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    Client UI->>Nginx Proxy: Send HTTP Request (e.g. GET /api/v1/projects with JWT)
+    Nginx Proxy->>Spring Security: Route request
+    Spring Security->>JwtFilter: Extract header & validate signature/expiry
+    alt Invalid Token
+        JwtFilter-->>Client UI: Return 401 Unauthorized Response
+    else Valid Token
+        JwtFilter->>SecurityContext: Populate Authentication Token (Role & Username)
+        Spring Security->>Controller: Route to @GetMapping "/api/v1/projects"
+        Controller->>Service: Call getProjectsForUser(email)
+        Service->>Repository: Query DB using Spring Data JPA
+        Repository-->>Service: Return Entity Collections
+        Service-->>Controller: Map Entities to projectDTOs
+        Controller-->>Client UI: Return 200 OK with ApiResponse(data)
+    end
+```
+
+### 3. Authentication & Authorization State Flow
+The flowchart below maps user authentication states and portal assignment routing:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Guest
+    Guest --> Registration: Fill Form & Request OTP
+    Registration --> Verification: Send OTP via Async Mail & Input Code
+    Verification --> Guest: Verified User
+    Guest --> Login: Post Credentials (/auth/login)
+    Login --> Error: Credentials Invalid
+    Error --> Login
+    Login --> JWT_Generated: Credentials Valid
+    JWT_Generated --> Role_Assignment: Set Security Context
+    state Role_Assignment {
+        ROLE_SUPER_ADMIN --> AdminPortal
+        ROLE_ENG_MANAGER --> HODPortal
+        ROLE_PROJECT_MANAGER --> PMPortal
+        ROLE_EMPLOYEE --> EmployeePortal
+        ROLE_CLIENT --> ClientPortal
+    }
+```
+
+### 4. Employee Management Lifecycle
+The workflow for hiring, allocating, and verifying enterprise resources:
+
+```mermaid
+graph LR
+    Start["New Employee Hired"] --> AccountCreation["Admin Creates Employee Account"]
+    AccountCreation --> RoleAssign["Assign Enterprise Role & Department"]
+    RoleAssign --> VerifyAccount["Set Status to PENDING_VERIFICATION"]
+    VerifyAccount --> SendMail["Asynchronously Dispatch Verification OTP"]
+    SendMail --> SetActive["User Verifies OTP ➡️ Status: ACTIVE"]
+    SetActive --> TeamAlloc["HOD/PM Allocates Employee to Team"]
+```
+
+### 5. Project Lifecycle & PM Assignment
+The creation, scoping, and PM management workflow for client projects:
+
+```mermaid
+graph TD
+    ClientProposal["Client Submits Proposal (RFP/Budget)"] --> UnderReview["Status: PENDING_REVIEW"]
+    UnderReview --> AdminAction{Admin Evaluation}
+    AdminAction -- Reject --> Rejected["Status: REJECTED (Sends Feedback Email)"]
+    AdminAction -- Approve --> Approved["Status: APPROVED"]
+    Approved --> AutoProject["Auto-Generate Project Instance & Code"]
+    AutoProject --> PMAssign["Assign Project Manager (PM)"]
+    PMAssign --> TeamForm["PM Forms Phoenix Delivery Squad"]
+```
+
+### 6. Task, Sprint, & Milestone Delivery Lifecycle
+The agile planning loop from product backlog definition to iteration release:
+
+```mermaid
+graph TD
+    ProjectInit["Project Active"] --> DefineMilestones["PM Defines High-Level Milestones"]
+    DefineMilestones --> BacklogGroom["PM populates Product Backlog Tasks"]
+    BacklogGroom --> CreateSprint["PM creates Sprint (e.g. Sprint 1)"]
+    CreateSprint --> SprintTarget["Define Capacity Hours & Story Points"]
+    SprintTarget --> TaskAlloc["Assign Tasks from Backlog to Sprint & Developer"]
+    TaskAlloc --> ProgressUpdate["Developer updates status (TODO ➡️ IN_PROGRESS ➡️ IN_REVIEW)"]
+    ProgressUpdate --> DoneStatus["Task COMPLETED ➡️ Velocity Tracked ➡️ Sprint Closed"]
+```
+
+---
+
+## 🛠️ Technology Stack
+
+| Architecture Layer | Core Technologies | Primary Use Case |
+| :--- | :--- | :--- |
+| **Frontend Framework** | React 19, TypeScript 5.2 | Single-page application rendering and type safety |
+| **Frontend Styling** | Material UI (MUI v5), Emotion | Design templates, icons, and light/dark theme toggles |
+| **State Management** | TanStack React Query v5 | Cache synchronization and asynchronous data fetching |
+| **Backend Engine** | Spring Boot 3.3.0, Java 17/21 | Server business logic and REST endpoint engine |
+| **Security Layer** | Spring Security 6.3, JJWT 0.12.5 | Stateless JWT authentication and endpoint guards |
+| **Database ORM** | Spring Data JPA, Hibernate | Database migrations and relational persistence mapping |
+| **Relational Database**| MySQL 8.0, H2 Database | Persistent storage and in-memory fallback |
+| **Reporting Utilities**| Apache POI, Apache PDFBox | Excel spreadsheet downloads and PDF document exports |
+| **Template Engine** | Thymeleaf 3.1 | Outbox HTML email styling |
+| **Deployment & Ops** | Docker, Nginx, GitHub Actions | Containerization, routing, and CI/CD pipelines |
+
+---
+
+## 📦 Project Modules Deep Dive
+
+### 1. Authentication & Security Module
+*   **Purpose:** Secure gateway login and signup.
+*   **Functionality:** Handles JWT generation, login verification, token refreshing, and OTP dispatching.
+*   **Key APIs:** `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `POST /api/v1/auth/send-otp`.
+*   **Data Flow:** Receives credentials ➡️ Encrypts password ➡️ Generates tokens ➡️ Returns Auth DTO.
+
+### 2. Employee Profile & Resource Module
+*   **Purpose:** Directory tracking and profile management.
+*   **Functionality:** CRUD operations on employee profiles, department assignments, and resource utilization rates.
+*   **Key APIs:** `GET /api/v1/employees`, `POST /api/v1/employees`, `PUT /api/v1/employees/{id}`.
+*   **Data Flow:** Fetch profiles ➡️ Map to User database entity ➡️ Sync with frontend layout tables.
+
+### 3. Project & Sprint Module
+*   **Purpose:** Handles project delivery tracking.
+*   **Functionality:** Creates projects, assigns teams, creates sprints, and defines milestones.
+*   **Key APIs:** `POST /api/v1/projects`, `POST /api/v1/sprints`, `POST /api/v1/milestones`.
+*   **Data Flow:** Project initiation ➡️ Team mapping ➡️ Iterative sprint backlog updates.
+
+### 4. Meeting & Event Module
+*   **Purpose:** Schedules internal and client alignment meetings.
+*   **Functionality:** Registers meetings, connects them to projects/teams, and notifies participants.
+*   **Key APIs:** `GET /api/v1/meetings`, `POST /api/v1/meetings`.
+*   **Data Flow:** Input meeting details ➡️ Save event ➡️ Dispatches calendar notifications.
+
+---
+
+## 💼 Enterprise Workflow Operations
+
+1.  **Onboarding & Proposal Review**: 
+    A client submits a project proposal detailing budgets and scope via the Client Portal. The admin reviews the request, updating its status to `APPROVED`.
+2.  **Project Initiation & Resource Allocation**: 
+    The approved proposal automatically spawns a new Project record. A Project Manager is assigned, who then creates a Team and allocates available engineers based on their utilization capacities.
+3.  **Sprint Planning**: 
+    The Project Manager creates a Sprint iteration and populates it with Tasks from the backlog.
+4.  **Task Execution & Time Tracking**: 
+    Engineers log in to their Employee Workspace, view their assigned tasks, and update status metrics. They submit timesheets to log their actual hours worked against these tasks.
+5.  **Reporting & Feedback**: 
+    Managers review the project dashboard metrics and download generated PDF or Excel reports for stakeholders.
+
+---
+
+## 🗄️ Database Design & ER Schema
+
+The database contains tables organized with clean referential integrity, indexes, and primary/foreign key relations.
+
+### Relational Schema Diagram
+
 ```mermaid
 erDiagram
-    users ||--|| roles : "has_role"
-    users ||--o| employees : "employee_profile"
-    users ||--o| clients : "client_profile"
-    departments ||--o| employees : "managed_by_HOD"
-    employees ||--o| departments : "belongs_to"
-    teams ||--o| departments : "allocated_under"
-    teams ||--o| employees : "led_by_team_lead"
-    projects ||--o| clients : "sponsored_by_client"
-    projects ||--o| employees : "managed_by_PM"
-    projects ||--o| teams : "delivered_by_team"
-    sprints }|--|| projects : "runs_under_project"
-    sprints }|--o| teams : "executed_by_team"
-    milestones }|--|| projects : "tracks_project"
-    milestones }|--o| employees : "owned_by_employee"
-    tasks }|--o| projects : "belongs_to_project"
-    tasks }|--o| teams : "assigned_to_team"
-    tasks }|--o| sprints : "assigned_to_sprint"
-    tasks }|--o| employees : "assigned_to_developer"
-    meetings }|--o| projects : "scheduled_for_project"
-    support_tickets }|--o| projects : "escalated_for_project"
-    audit_logs }|--o| users : "logs_user_action"
-    notifications }|--|| users : "notifies_user"
+    users ||--|| roles : "mapped_by_role_id"
+    users ||--o| employees : "has_profile"
+    users ||--o| clients : "has_profile"
+    departments ||--o| employees : "allocates_to"
+    employees ||--o| teams : "leads"
+    projects ||--o| teams : "delivered_by"
+    projects ||--o| clients : "funded_by"
+    projects ||--o| employees : "managed_by_pm"
+    sprints }|--|| projects : "belongs_to"
+    sprints }|--o| teams : "belongs_to"
+    tasks }|--o| projects : "belongs_to"
+    tasks }|--o| sprints : "assigned_to"
+    tasks }|--o| employees : "assignee"
+    audit_logs }|--|| users : "performed_by"
+    notifications }|--|| users : "recipient"
 
     users {
         bigint id PK
@@ -122,435 +312,360 @@ erDiagram
         bigint role_id FK
         tinyint is_active
         tinyint is_verified
-        timestamp created_at
     }
     employees {
         bigint id PK
-        bigint user_id FK
-        varchar employee_code
+        bigint user_id FK "UK"
+        varchar employee_code UK
         varchar first_name
         varchar last_name
-        varchar phone
         bigint department_id FK
         varchar designation
-        date joining_date
-        varchar status
-    }
-    clients {
-        bigint id PK
-        bigint user_id FK
-        varchar company_name
-        varchar contact_person
-        varchar email
-        varchar phone
-        varchar contract_value
     }
     projects {
         bigint id PK
-        varchar project_code
+        varchar project_code UK
         varchar title
         bigint client_id FK
         bigint project_manager_id FK
         bigint team_id FK
         decimal budget
-        varchar tech_stack
-        date start_date
-        date end_date
-        varchar priority
-        varchar status
         double progress_percentage
-    }
-    tasks {
-        bigint id PK
-        varchar task_code
-        varchar title
-        bigint project_id FK
-        bigint sprint_id FK
-        bigint assignee_id FK
-        varchar priority
         varchar status
-        double estimated_hours
-        double actual_hours
     }
 ```
 
-### 3.3 Authentication & Authorization Flowchart
-```mermaid
-sequenceDiagram
-    autonumber
-    Client App->>Auth Controller: POST /api/v1/auth/login (email, password)
-    Auth Controller->>CustomUserDetailsService: loadUserByUsername(email)
-    CustomUserDetailsService-->>Auth Controller: UserDetails & Status Check
-    Auth Controller->>AuthenticationManager: authenticate()
-    alt Credentials Invalid or Account Unverified
-        AuthenticationManager-->>Client App: 401 Unauthorized / Unverified Error
-    else Authentication Success
-        Auth Controller->>JwtTokenProvider: generateToken(UserPrincipal)
-        JwtTokenProvider-->>Auth Controller: JWT Access Token & Refresh Token
-        Auth Controller-->>Client App: AuthResponse (Bearer Token + Role Metadata)
-    end
-```
-
-### 3.4 Client Proposal -> PM Assignment Flowchart
-```mermaid
-graph TD
-    A["Client Portal: Submit Proposal"] --> B["Attach RFP / BRD Specifications"]
-    B --> C["Database Save: STATUS_PENDING_REVIEW"]
-    C --> D{"Super Admin Review"}
-    D -- Approve Proposal --> E["POST /api/v1/admin/project-requests/{id}/accept"]
-    E --> F["Open Manager Assignment Dialog"]
-    F --> G["Select Project Manager & Auto-Create Project"]
-    G --> H["PM Receives Portal Notification & Project Appears in PM Portal"]
-    D -- Reject Proposal --> I["POST /api/v1/admin/project-requests/{id}/reject"]
-    I --> J["Save Rejection Reason & Dispatch Email Alert"]
-```
-
-### 3.5 End-to-End REST API Exception Handling Lifecycle
-```mermaid
-graph TD
-    Client["React 19 Axios Interceptor"] -->|HTTP Request + Bearer Token| JwtFilter["JwtAuthenticationFilter"]
-    JwtFilter -->|Token Valid| SecurityCtx["Set SecurityContext Authentication"]
-    JwtFilter -->|Token Expired / Missing| Error401["401 Unauthorized Response"]
-    SecurityCtx --> Controller["Spring REST Controller"]
-    Controller -->|Input Validation Check| Service["Service Layer Business Logic"]
-    Controller -->|Validation Fails| GlobalEH["GlobalExceptionHandler (@ControllerAdvice)"]
-    Service -->|Database Integrity Exception| GlobalEH
-    GlobalEH -->|Format Standard Response| JsonErr["ApiResponse.error(HttpStatus, Message)"]
-    JsonErr -->|HTTP 400 / 409 / 500 JSON| Client
-```
+*   **Primary Keys (PK)**: All tables use auto-incrementing `BIGINT` IDs.
+*   **Foreign Keys (FK)**: Enforces referential integrity constraints across tables.
+*   **Indexes**: Configured on high-frequency search columns like `users.email` and `employees.employee_code`.
 
 ---
 
-## 4. Features Checklist & System Capabilities
-
-* **Authentication & Authorization**
-  * [x] **User Registration**: Sign up with personal details, organization, and persona role.
-  * [x] **6-Digit Gmail OTP**: Multi-factor signup verification via Spring Mail.
-  * [x] **Stateless JWT Security**: Token-based access with `@PreAuthorize` method security.
-  * [x] **5 Portal Persona Guarding**: Custom navigation for Super Admin, HOD, PM, Employee, and Client.
-* **Enterprise Form Validation & Exception Handling**
-  * [x] **Comprehensive Client Validation**: Strict pattern checks for email regex, passwords (min 6 chars), dates, and numbers.
-  * [x] **Centralized Exception Handler**: `GlobalExceptionHandler.java` translating `DataIntegrityViolationException`, `IllegalArgumentException`, and validation errors into friendly `ApiResponse.error()` JSON.
-* **Corporate Client Portal**
-  * [x] **Proposal Submission**: Project request wizard with RFP/BRD specification file attachments.
-  * [x] **Dynamic Meetings**: Real-time syncs with PMs and engineers with 1-click Join links.
-  * [x] **Support Incident Escalations**: Raise critical support tickets directly to assigned Project Managers.
-* **Agile Sprint & Delivery Management**
-  * [x] **Sprint Planner**: Create sprints, configure capacity hours, story points, and validate date ranges (`endDate >= startDate`).
-  * [x] **Milestone Tracking**: Phase completions, target due dates, and milestone owners.
-  * [x] **Resource Allocation**: Balance team member utilization percentages and skills.
-* **Audit, Reporting & Operations**
-  * [x] **Database Audit Logging**: Capture logins, transfers, proposals, and updates in `audit_logs` table with CSV export.
-  * [x] **Excel & PDF Exports**: Download structured project, task, and timesheet reports on demand.
-  * [x] **Asynchronous Email Dispatches**: HTML email notifications sent via `@EnableAsync` for non-blocking UI.
-
----
-
-### 4.1 Unit & Integration Testing Suite
-
-The SPEMS Enterprise repository incorporates a full-coverage automated testing architecture across both backend and frontend layers:
-
-| Test Layer | Technologies / Frameworks | Coverage Scope | Execution Command |
-| :--- | :--- | :--- | :--- |
-| **Backend Services** | JUnit 5, Mockito | Service business logic, JPA repository mocks, security validation | `cd backend && mvn test` |
-| **Backend Controllers** | Spring Boot Test, MockMvc | REST endpoints, HTTP status codes, payload serialization, RBAC gates | `cd backend && mvn test` |
-| **Backend Data Layer** | `@DataJpaTest`, H2 / MySQL | Custom JPA query execution, entity constraints, foreign keys | `cd backend && mvn test` |
-| **Frontend UI Testing** | Vitest / RTL, React Testing Library | Component rendering, state updates, form validation triggers | `cd frontend && npm test` |
-
-#### Running Backend & Frontend Test Suites
-
-1. **Execute Backend Tests**:
-   ```bash
-   cd backend
-   mvn clean test
-   ```
-2. **Execute Frontend Tests**:
-   ```bash
-   cd frontend
-   npm test
-   ```
-
----
-
-## 5. Database Scripts & Schema
-
-The SQL provisioning scripts for initializing the MySQL database schema and populating initial seed records are maintained in the repository:
-
-* **File Path**: `database/schema_and_data.sql`
-
-### 5.1 Initial Seed Data Preview (DML)
-```sql
--- Initial System Roles
-INSERT INTO `roles` (`id`, `name`, `description`) VALUES
-(1, 'ROLE_SUPER_ADMIN', 'Super Administrator Role'),
-(2, 'ROLE_ADMIN', 'System Administrator Role'),
-(3, 'ROLE_ENG_MANAGER', 'Engineering Department Manager Role'),
-(4, 'ROLE_HR_MANAGER', 'Human Resources Manager Role'),
-(5, 'ROLE_PROJECT_MANAGER', 'Project Manager Role'),
-(6, 'ROLE_TEAM_LEAD', 'Team Lead Role'),
-(7, 'ROLE_EMPLOYEE', 'Software Employee Role'),
-(8, 'ROLE_CLIENT', 'Corporate Client Role');
-
--- Default Enterprise Departments
-INSERT INTO `departments` (`id`, `name`, `code`, `annual_budget`) VALUES
-(1, 'Core Engineering & Technology', 'ENG', 1200000.00),
-(2, 'Human Capital & HR', 'HR', 450000.00),
-(3, 'Project Management Office', 'PMO', 750000.00),
-(4, 'Quality Assurance & Testing', 'QA', 350000.00);
-
--- Initial Enterprise Accounts
-INSERT INTO `users` (`id`, `email`, `password_hash`, `role_id`, `is_active`, `is_verified`, `created_at`) VALUES
-(1, 'admin@spems.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVym54n0ySg6Y.6.1J0O.YKG', 1, 1, 1, NOW()),
-(2, 'pm@spems.com', '$2a$10$e8w.p4eDkXg8j/2r9f3LceY8rS8zJ5O0e/5qX9y7Z.1K4.YKG', 5, 1, 1, NOW()),
-(3, 'eng.manager@spems.com', '$2a$10$e8w.p4eDkXg8j/2r9f3LceY8rS8zJ5O0e/5qX9y7Z.1K4.YKG', 3, 1, 1, NOW()),
-(4, 'employee@spems.com', '$2a$10$e8w.p4eDkXg8j/2r9f3LceY8rS8zJ5O0e/5qX9y7Z.1K4.YKG', 7, 1, 1, NOW()),
-(5, 'client@spems.com', '$2a$10$e8w.p4eDkXg8j/2r9f3LceY8rS8zJ5O0e/5qX9y7Z.1K4.YKG', 8, 1, 1, NOW());
-```
-
----
-
-## 6. Postman Collection & API Testing
-
-A complete Postman collection pre-configured with environment variables and automated JWT Bearer token capture scripts is provided:
-
-* **Collection File**: `postman/SPEMS_Enterprise.postman_collection.json`
-
-### 6.1 Quick Execution Guide
-1. Open Postman $\rightarrow$ Click **Import**.
-2. Select `postman/SPEMS_Enterprise.postman_collection.json`.
-3. Open the **Authentication** folder $\rightarrow$ Execute `1. Admin Login`.
-4. The test response script automatically extracts the JWT token from the payload and assigns it to `{{jwtToken}}`.
-5. All subsequent requests in Employees, Projects, Sprints, Tasks, Timesheets, Meetings, Reports, and Audit Logs automatically attach `Authorization: Bearer {{jwtToken}}`.
-
----
-
-## 7. API Reference Table
-
-All protected endpoints require an `Authorization: Bearer <jwtToken>` request header.
-
-### 7.1 Authentication & OTP Domain
-| Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/register` | Public | Register a new user profile and trigger Gmail OTP |
-| `POST` | `/api/v1/auth/login` | Public | Authenticate user credentials and issue signed JWT token |
-| `POST` | `/api/v1/auth/verify-otp` | Public | Validate 6-digit email OTP verification code |
-| `POST` | `/api/v1/auth/forgot-password` | Public | Send password reset instructions via email |
-| `POST` | `/api/v1/auth/reset-password` | Public | Reset account password with valid token |
-
-### 7.2 Employee & Department Domain
-| Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/employees` | Authenticated | Retrieve paginated employee list with search and filters |
-| `POST` | `/api/v1/employees` | `ROLE_ADMIN` | Add a new employee record |
-| `PUT` | `/api/v1/employees/{id}` | `ROLE_ADMIN` | Update employee information or designation |
-| `PATCH` | `/api/v1/employees/{id}/transfer-department` | `ROLE_ADMIN` | Transfer employee to a new department |
-| `GET` | `/api/v1/departments` | Authenticated | Fetch all enterprise departments |
-| `POST` | `/api/v1/departments` | `ROLE_ADMIN` | Create a new department with budget allocation |
-| `PATCH` | `/api/v1/departments/{id}/assign-hod` | `ROLE_ADMIN` | Assign Head of Department (HOD) |
-
-### 7.3 Corporate Client & Proposal Domain
-| Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/clients` | `ROLE_ADMIN`, `ROLE_PROJECT_MANAGER` | List onboarded corporate clients |
-| `POST` | `/api/v1/clients` | `ROLE_ADMIN` | Onboard a corporate client account |
-| `GET` | `/api/v1/admin/project-requests` | `ROLE_ADMIN` | List pending project proposals submitted by clients |
-| `POST` | `/api/v1/admin/project-requests/{id}/accept` | `ROLE_ADMIN` | Accept proposal and open PM assignment modal |
-| `POST` | `/api/v1/admin/project-requests/{id}/reject` | `ROLE_ADMIN` | Reject proposal with reason and send email alert |
-
-### 7.4 Agile Delivery & Project Management Domain
-| Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/projects` | Authenticated | List projects with calculated completion percentages |
-| `POST` | `/api/v1/projects` | `ROLE_ADMIN`, `ROLE_PROJECT_MANAGER` | Create a new project workspace |
-| `GET` | `/api/v1/sprints` | Authenticated | Retrieve sprints for a project |
-| `POST` | `/api/v1/sprints` | `ROLE_PROJECT_MANAGER` | Create sprint with capacity hours and story points |
-| `POST` | `/api/v1/milestones` | `ROLE_PROJECT_MANAGER` | Create project milestone with due date tracking |
-| `POST` | `/api/v1/resource-allocations` | `ROLE_PROJECT_MANAGER` | Allocate employee to project with workload % |
-
-### 7.5 Task, Timesheet & Meeting Domain
-| Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/tasks` | Authenticated | Fetch tasks with priority and status filters |
-| `PATCH` | `/api/v1/tasks/{id}/status` | Authenticated | Update task progress status (`PENDING`, `IN_PROGRESS`, `COMPLETED`) |
-| `GET` | `/api/v1/timesheets` | Authenticated | Retrieve logged timesheet entries |
-| `POST` | `/api/v1/timesheets` | `ROLE_EMPLOYEE` | Log daily work hours (0.5–24 hours validation) |
-| `GET` | `/api/v1/meetings` | Authenticated | Fetch scheduled role-based meetings |
-| `POST` | `/api/v1/meetings` | `ROLE_PROJECT_MANAGER`, `ROLE_ADMIN` | Schedule meeting with Google Meet/Teams link |
-| `POST` | `/api/v1/support-tickets` | `ROLE_CLIENT` | Raise support ticket to assigned PM |
-
-### 7.6 Reports, Audit Logs & Notifications Domain
-| Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/reports/pdf` | Authenticated | Generate formatted executive PDF report |
-| `GET` | `/api/v1/admin/audit-logs` | `ROLE_ADMIN` | Fetch paginated administrative audit logs |
-| `GET` | `/api/v1/admin/audit-logs/export` | `ROLE_ADMIN` | Download audit history in Excel CSV format |
-| `GET` | `/api/v1/notifications` | Authenticated | Fetch user notifications |
-
----
-
-## 8. Project Structure
+## 📂 Folder Structure
 
 ```text
-Project-Management-system/
-├── backend/
+Project-Management-system-main/
+├── backend/                                   # Spring Boot Java Server
 │   ├── src/main/java/com/enterprise/spems/
-│   │   ├── config/
-│   │   │   ├── DataInitializer.java
-│   │   │   └── SecurityConfig.java
-│   │   ├── controller/
-│   │   │   ├── AuditLogController.java
-│   │   │   ├── AuthController.java
-│   │   │   ├── ClientController.java
-│   │   │   ├── DashboardController.java
-│   │   │   ├── DepartmentController.java
-│   │   │   ├── EmployeeController.java
-│   │   │   ├── MeetingController.java
-│   │   │   ├── MilestoneController.java
-│   │   │   ├── NotificationController.java
-│   │   │   ├── ProjectController.java
-│   │   │   ├── ProjectRequestController.java
-│   │   │   ├── ReportController.java
-│   │   │   ├── ResourceAllocationController.java
-│   │   │   ├── SprintController.java
-│   │   │   ├── TaskController.java
-│   │   │   ├── TeamController.java
-│   │   │   └── TimesheetController.java
-│   │   ├── exception/
-│   │   │   └── GlobalExceptionHandler.java
-│   │   ├── model/
-│   │   │   ├── entity/
-│   │   │   │   ├── AuditLog.java
-│   │   │   │   ├── Client.java
-│   │   │   │   ├── Department.java
-│   │   │   │   ├── Employee.java
-│   │   │   │   ├── Meeting.java
-│   │   │   │   ├── Milestone.java
-│   │   │   │   ├── Project.java
-│   │   │   │   ├── Sprint.java
-│   │   │   │   ├── Task.java
-│   │   │   │   ├── Team.java
-│   │   │   │   └── User.java
-│   │   └── security/
-│   │       ├── JwtAuthenticationFilter.java
-│   │       └── JwtTokenProvider.java
-│   ├── Dockerfile
-│   └── pom.xml
-├── frontend/
+│   │   ├── config/                            # Web Security, CORS, Seed Initialization
+│   │   ├── controller/                        # REST Controllers
+│   │   ├── dto/                               # Data Transfer Request/Response Models
+│   │   ├── exception/                         # Global Exception Handlers
+│   │   ├── model/                             # Entities and Enumerations
+│   │   ├── repository/                        # JPA Repositories
+│   │   ├── security/                          # JWT Logic
+│   │   └── service/                           # Transactional Interfaces & Implementations
+│   └── pom.xml                                # Maven Dependencies Config
+├── frontend/                                  # React 19 Client Web App
 │   ├── src/
-│   │   ├── config/
-│   │   │   ├── axios.config.ts
-│   │   │   └── routes.config.tsx
-│   │   ├── context/
-│   │   │   └── AuthContext.tsx
-│   │   ├── modules/
-│   │   │   ├── audit/
-│   │   │   ├── auth/
-│   │   │   ├── client/
-│   │   │   ├── dashboard/
-│   │   │   ├── department/
-│   │   │   ├── employees/
-│   │   │   ├── meeting/
-│   │   │   ├── project/
-│   │   │   ├── task/
-│   │   │   └── timesheet/
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── package.json
+│   │   ├── components/                        # Common UI Layout Widgets
+│   │   ├── config/                            # Axios API Clients
+│   │   ├── context/                           # Auth State Contexts
+│   │   └── modules/                           # Dashboards, Sprints, Profile Components
+│   └── package.json                           # NPM Dependencies Config
 ├── database/
-│   └── schema_and_data.sql
-├── postman/
-│   └── SPEMS_Enterprise.postman_collection.json
-├── docker-compose.yml
-└── README.md
+│   └── schema_and_data.sql                    # Initial SQL DDL/DML script
+└── docker-compose.yml                         # Docker Compose Config
 ```
 
 ---
 
-## 9. Setup & Installation Guide
+## 🚀 Installation Guide
 
-### Option A: Docker Compose Deployment (Recommended)
-Make sure Docker Desktop is active on your host system.
+### Prerequisites
+Make sure your system has these tools installed:
+*   **Java JDK (17 or 21)**
+*   **Apache Maven 3.8+**
+*   **Node.js (v18 or higher) & NPM**
+*   **MySQL Server 8.0** *(Optional: defaults to in-memory H2 database)*
 
-1. **Clone the Repository**:
+---
+
+### Step 1: Run the Spring Boot Backend
+1.  Open your terminal and navigate to the backend folder:
+    ```bash
+    cd backend
+    ```
+2.  Build the Maven project:
+    ```bash
+    mvn clean install -DskipTests
+    ```
+3.  Start the application:
+    ```bash
+    mvn spring-boot:run
+    ```
+    The backend will start at **`http://localhost:8080`**.
+
+---
+
+### Step 2: Run the React Frontend
+1.  Open a new terminal window and navigate to the frontend folder:
+    ```bash
+    cd frontend
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Launch the development server:
+    ```bash
+    npm run dev
+    ```
+    The React application will open at **`http://localhost:5173`**.
+
+---
+
+### Step 3: Database Configuration (Optional MySQL)
+1. Ensure your local MySQL server is running on port `3306`.
+2. Run the database setup script:
    ```bash
-   git clone https://github.com/Badhrinadhgvs/Smart-Employee-Project-Management-System-Using-Spring-and-React.git
-   cd Smart-Employee-Project-Management-System-Using-Spring-and-React
+   mysql -u root -p < database/schema_and_data.sql
    ```
-2. **Launch Container Services**:
-   ```bash
-   docker-compose up -d --build
+3. Modify the properties file [application-dev.yml](file:///c:/Users/RAVULA%20PAVANI/Downloads/Project-Management-system-main%20%281%29/Project-Management-system-main/backend/src/main/resources/application-dev.yml):
+   ```yaml
+   spring:
+     datasource:
+       url: jdbc:mysql://localhost:3306/spems_db?useSSL=false&serverTimezone=UTC
+       username: root
+       password: yourpassword
    ```
-3. **Access Operating Endpoints**:
-   * **Frontend Application**: `http://localhost` (Mapped to Port 80 via NGINX)
-   * **Backend REST Service**: `http://localhost:8081` (Mapped to Port 8080)
-   * **MySQL Database**: `localhost:3307` (Mapped to Port 3306)
 
 ---
 
-### Option B: Local Manual Setup
+## 🐳 Docker Compose Deployment
 
-#### Step 1: Initialize Database
-Start MySQL locally and execute the provisioning script:
-```bash
-mysql -u root -p < database/schema_and_data.sql
-```
+The system includes a ready-to-use Docker environment.
 
-#### Step 2: Configure Environment (`backend/src/main/resources/application.properties`)
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/spems_db?useSSL=false&serverTimezone=UTC
-spring.datasource.username=root
-spring.datasource.password=root
-
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your_email@gmail.com
-spring.mail.password=your_app_password
-```
-
-#### Step 3: Run Backend Service
-```bash
-cd backend
-mvn clean install
-mvn test
-mvn spring-boot:run
-```
-
-#### Step 4: Run Frontend SPA
-```bash
-cd frontend
-npm install
-npm test
-npm run dev
-```
+1.  **Build and Run the Containers**:
+    Run this command in the root folder containing the `docker-compose.yml` file:
+    ```bash
+    docker compose up --build -d
+    ```
+2.  **Verify Status**:
+    ```bash
+    docker compose ps
+    ```
+*   **Frontend Dashboard**: `http://localhost` (Nginx on Port 80)
+*   **Backend Spring REST API**: `http://localhost:8081` (Port 8080 mapped to 8081)
+*   **MySQL Database**: Runs on host Port `3307` (Container Port 3306 mapped to 3307)
 
 ---
 
-## 10. Demo & Sandbox Credentials
+## 🔑 Environment Variables
 
-The following pre-seeded credentials are available for role testing:
-
-| Portal Persona | Email | Password | Role Description |
+| Variable Name | Description | Default Value | Required |
 | :--- | :--- | :--- | :--- |
-| **Super Admin** | `admin@spems.com` | `Admin@123` | Full enterprise control, client proposals, approval queues |
-| **Project Manager** | `pm@spems.com` | `PMpass@123` | Sprints, milestones, meetings, resource allocation |
-| **Department Head** | `eng.manager@spems.com` | `DeptPass@123` | Department budgets, HOD oversight, timesheet approvals |
-| **Software Employee** | `employee@spems.com` | `EmpPass@123` | Task tracking, timesheet work logging (0.5–24h) |
-| **Corporate Client** | `client@spems.com` | `ClientPass@123` | Proposals, spec attachments, dynamic meetings, tickets |
+| `SPRING_PROFILES_ACTIVE` | Active spring profile configuration | `dev` | Optional |
+| `SPRING_DATASOURCE_URL` | JDBC database URL | `jdbc:h2:mem:spems_db` | Optional |
+| `SPRING_DATASOURCE_USERNAME`| Database username credential | `sa` | Optional |
+| `SPRING_DATASOURCE_PASSWORD`| Database password credential | *(empty)* | Optional |
+| `JWT_SECRET` | Secret key for signing authentication tokens | `9a8b7c6d5e4f3a...` | Optional |
+| `MAIL_HOST` | SMTP server address | `smtp.gmail.com` | Optional |
 
 ---
 
-## 11. Interactive API Documentation (Swagger UI)
+## 📋 API Overview & Documentation Catalog
 
-When the backend Spring Boot application is active:
+Once the backend is running locally, navigate to:
+*   **Interactive Swagger Playground**: `http://localhost:8080/swagger-ui.html`
+*   **Raw OpenAPI JSON Specifications**: `http://localhost:8080/v3/api-docs`
 
-* **Interactive Swagger UI**: `http://localhost:8080/swagger-ui.html`
-* **OpenAPI Spec (JSON)**: `http://localhost:8080/v3/api-docs`
+### Primary REST Endpoint Catalog
+
+| Method | Endpoint | Description | Access Role | Request Body | Response Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | Authenticate user credentials | Public | `LoginRequest` | `200 OK` |
+| `POST` | `/api/v1/auth/register`| Register user profile | Public | `RegisterRequest` | `200 OK` |
+| `GET` | `/api/v1/dashboard/metrics`| Fetch high-level project KPIs | Administrator | *(none)* | `200 OK` |
+| `GET` | `/api/v1/employees` | Fetch list of employees | Employee | *(none)* | `200 OK` |
+| `POST` | `/api/v1/projects` | Initialize a new project | Project Manager | `ProjectDTO` | `201 CREATED` |
+| `POST` | `/api/v1/sprints` | Create a sprint iteration | Project Manager | `SprintDTO` | `201 CREATED` |
+| `GET` | `/api/v1/reports/pdf` | Export project progress PDF report | Manager | *(none)* | `200 OK` |
 
 ---
 
-## 12. License & Author Info
+## 🔑 Demo & Sandbox Credentials
 
-* **Author**: Gundlapalli Venkata Sai Badhrinadh
-* **License**: MIT License
+| Portal / Persona | Email Address | Password |
+| :--- | :--- | :--- |
+| **System Super Admin** | `admin@spems.com` | `Admin@123` |
+| **Head of Engineering (HOD)** | `sarah.c@spems.com` | `Admin@123` |
+| **Senior Project Manager** | `alex.m@spems.com` | `Admin@123` |
+| **Corporate Client** | `robert@globalbank.com` | `ClientPass@2026!` |
+
+---
+
+## 📬 Postman Collection Setup
+
+An API validation run file is configured for local testing.
+
+### How to Import and Execute:
+1. Open your Postman client app and click **Import**.
+2. Select your JSON collections (or use **Import Link** pointing to your local OpenAPI schema: `http://localhost:8080/v3/api-docs`).
+3. Set up a Postman Environment:
+   * Key: `baseUrl` ➡️ Value: `http://localhost:8080/api/v1`
+   * Key: `authToken` ➡️ Value: *(Leave empty, captured from login script)*
+4. In the `POST /auth/login` request, add a test script to capture the token:
+   ```javascript
+   var jsonData = pm.response.json();
+   pm.environment.set("authToken", jsonData.data.accessToken);
+   ```
+
+---
+
+## 🧪 Unit & Integration Testing Suite
+
+SPEMS features an automation test suite to verify code stability.
+
+### 1. Test Architecture
+* **Unit Tests**: Employs **Mockito** to mock repository behavior and isolate service test runs.
+* **Integration Tests**: Employs **MockMvc** to send HTTP requests to the controller layer and verify security filter gates offline.
+
+### 2. How to Run the Tests:
+Run this command in the backend folder:
+```bash
+mvn test
+```
+
+---
+
+## 🔒 Security & Performance Engineering
+
+### Security Architecture
+* **Cryptographic Hashing**: All user passwords are encrypted using **BCrypt** with strong salt parameters before being persisted in the database database.
+* **Cross-Origin Resource Sharing (CORS)**: Access is configured to allow only validated client URLs while blocking arbitrary access.
+* **SQL Injection & XSS Protections**: Use of Spring Data JPA/Hibernate parameterized statements prevents SQL injections. Output data is escaped properly.
+* **Method Security**: Dynamic checks using Spring Security `@PreAuthorize` are enforced on REST endpoints to verify execution scope.
+
+### Performance Optimizations
+* **Database Connection Pooling**: HikariCP is pre-configured to reuse active connections and prevent leaks.
+* **TanStack Caching**: On the client UI, React Query caches fetched datasets, reducing repetitive API requests.
+* **Pagination**: Heavy REST collections (like Audit Logs and Task boards) utilize Spring Data Pagination (`Pageable`) to limit server overhead.
+
+---
+
+## 📐 Software Engineering Best Practices
+
+* **SOLID Principles**: Controllers delegate logic to Services, which communicate with Repositories (Single Responsibility Principle). Repositories extend JpaRepository interfaces without modification (Open/Closed Principle).
+* **DRY (Don't Repeat Yourself)**: Common HTTP responses are wrapped under `ApiResponse` models. Validations use reusable validator hooks.
+* **KISS (Keep It Simple, Stupid)**: Clean codebase design, minimizing complex loops or unnecessary layers.
+* **YAGNI (You Aren't Gonna Need It)**: Features are designed around actual workspace workflows without adding unused, complex code blocks.
+
+---
+
+## 🖼️ Screenshots & Visual Placeholders
+
+*   **Login Page**
+
+
+    *   *Caption: Secure login gateway supporting multi-portal access.*
+*   **Admin Dashboard**
+*   <img width="1600" height="776" alt="eb45a0ae-c962-40da-a6d5-0ae3e88a2977" src="https://github.com/user-attachments/assets/7c1f690a-f1b3-45c6-a59d-7e4be7532a1c" />
+
+    *   *Caption: Overview panel displaying team allocations and system KPIs.*
+*   **Sprint Workspace**
+*   <img width="1600" height="767" alt="1883e1ef-dbdc-48f1-a108-e55aa1d595cc" src="https://github.com/user-attachments/assets/006c0c9b-6b89-4504-a1e3-607ff94a3e18" />
+
+    *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="770" alt="image" src="https://github.com/user-attachments/assets/b1704126-3439-49af-85d5-e691d9416cf3" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="760" alt="image" src="https://github.com/user-attachments/assets/5aca566a-74e8-4d9a-bf53-fad4ee20c041" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="757" alt="image" src="https://github.com/user-attachments/assets/66fa78ba-0184-40b5-a409-c0c9006d3cc9" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="757" alt="image" src="https://github.com/user-attachments/assets/9567101c-d731-4a3e-8272-8f9be9dba1f0" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="758" alt="image" src="https://github.com/user-attachments/assets/c677f04b-91dc-4f13-b556-0d32582207af" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="758" alt="image" src="https://github.com/user-attachments/assets/58927040-dfb8-42eb-a4ad-36db9ac009f1" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="907" alt="image" src="https://github.com/user-attachments/assets/e4342c79-ee7b-444a-bdf7-7122e6f4b852" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="926" alt="image" src="https://github.com/user-attachments/assets/a2480dd3-f16a-4891-8304-4c8a17bbaf5c" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="967" alt="image" src="https://github.com/user-attachments/assets/caca8ed3-1c37-4d10-91f7-ec7e916c3245" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   **Client Proposal Portal**
+*   <img width="1600" height="934" alt="image" src="https://github.com/user-attachments/assets/ca7e8732-21ac-4bb1-b7f1-cd24726e4aca" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+    *    *   **Client Proposal Portal**
+*   <img width="1600" height="937" alt="image" src="https://github.com/user-attachments/assets/b3d86c59-a459-4365-b235-0831ccae7c9c" />
+
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+*   *   **Client Proposal Portal**
+*   <img width="1600" height="934" alt="image" src="https://github.com/user-attachments/assets/0107b8d3-d844-4d23-9d7f-006333f3aef9" />
+
+
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+
+*   **Client Proposal Portal**
+*   <img width="1600" height="763" alt="image" src="https://github.com/user-attachments/assets/02df075d-0de3-49c0-9d70-4ea05b7b5add" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+    *   *   **Client Proposal Portal**
+*   <img width="1600" height="764" alt="image" src="https://github.com/user-attachments/assets/d224e3dd-9908-42f5-b856-889441f68e04" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+    *   *   **Client Proposal Portal**
+*   <img width="1600" height="762" alt="image" src="https://github.com/user-attachments/assets/b9e59be0-d588-4c01-bb51-7fa91382f9b3" />
+
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+    *   *   **Client Proposal Portal**
+*   blob:https://web.whatsapp.com/40375447-7fe8-4a0e-bfc8-1706c644fcf4
+    *   *Caption: Multi-step submission wizard for project requests.*
+    *       *   *Caption: Task lists and active sprint boards for project teams.*
+   
+   
+    *   *Caption: Multi-step submission wizard for project requests.*<img width="1600" height="770" alt="57f57596-a645-4eda-8869-4e8844f8189d" src="https://github.com/user-attachments/assets/cafc51ae-a576-4f54-b531-bce17333c74c" />
+<img width="1600" height="770" alt="57f57596-a645-4eda-8869-4e8844f8189d" src="https://github.com/user-attachments/assets/59cf40f4-1cc5-428e-8cbf-80ed50408790" />
+
+
+---
+
+## 🗺️ Future Roadmap
+1. **Dynamic Gantt Chart Editor**: An interactive drag-and-drop Gantt timeline chart in the project workspace portal.
+2. **WebSockets Live Team Chats**: Real-time channel communications inside the project space.
+3. **Advanced Timesheet Reminders**: Automated cron schedules querying unsubmitted timesheets and mailing late users.
+4. **Third-Party Integrations**: Slack and Microsoft Teams hooks for task status updates.
+
+---
+
+## 📄 License
+Distributed under the **MIT License**. See `LICENSE` for details.
+
