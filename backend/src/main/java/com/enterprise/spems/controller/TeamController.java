@@ -1,10 +1,14 @@
 package com.enterprise.spems.controller;
 
 import com.enterprise.spems.dto.ApiResponse;
+import com.enterprise.spems.model.entity.AuditLog;
 import com.enterprise.spems.model.entity.Employee;
+import com.enterprise.spems.model.entity.Notification;
 import com.enterprise.spems.model.entity.Project;
 import com.enterprise.spems.model.entity.Team;
+import com.enterprise.spems.repository.AuditLogRepository;
 import com.enterprise.spems.repository.EmployeeRepository;
+import com.enterprise.spems.repository.NotificationRepository;
 import com.enterprise.spems.repository.ProjectRepository;
 import com.enterprise.spems.repository.TeamRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +28,8 @@ public class TeamController {
     private final TeamRepository teamRepository;
     private final ProjectRepository projectRepository;
     private final EmployeeRepository employeeRepository;
+    private final NotificationRepository notificationRepository;
+    private final AuditLogRepository auditLogRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Team>>> getAllTeams(HttpServletRequest request) {
@@ -34,26 +40,69 @@ public class TeamController {
     @PostMapping
     public ResponseEntity<ApiResponse<Team>> createTeam(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
         Team team = new Team();
-        team.setName((String) payload.getOrDefault("name", "New Squad"));
+        team.setName((String) payload.getOrDefault("name", "New Delivery Squad"));
 
+        Project project = null;
         if (payload.get("projectId") != null) {
             Long projectId = Long.valueOf(payload.get("projectId").toString());
-            projectRepository.findById(projectId).ifPresent(team::setProject);
+            project = projectRepository.findById(projectId).orElse(null);
+            if (project != null) {
+                team.setProject(project);
+            }
         }
 
         if (payload.get("teamLeadId") != null && !payload.get("teamLeadId").toString().isEmpty()) {
             Long teamLeadId = Long.valueOf(payload.get("teamLeadId").toString());
-            employeeRepository.findById(teamLeadId).ifPresent(team::setTeamLead);
+            employeeRepository.findById(teamLeadId).ifPresent(emp -> {
+                team.setTeamLead(emp);
+                if (emp.getUser() != null) {
+                    notificationRepository.save(Notification.builder()
+                            .recipient(emp.getUser())
+                            .title("Assigned as Team Lead for " + team.getName())
+                            .message("You have been designated as Team Lead for " + team.getName())
+                            .linkUrl("/teams")
+                            .isRead(false)
+                            .build());
+                }
+            });
         }
 
         if (payload.get("scrumMasterId") != null && !payload.get("scrumMasterId").toString().isEmpty()) {
             Long scrumMasterId = Long.valueOf(payload.get("scrumMasterId").toString());
-            employeeRepository.findById(scrumMasterId).ifPresent(team::setScrumMaster);
+            employeeRepository.findById(scrumMasterId).ifPresent(emp -> {
+                team.setScrumMaster(emp);
+                if (emp.getUser() != null) {
+                    notificationRepository.save(Notification.builder()
+                            .recipient(emp.getUser())
+                            .title("Assigned as Scrum Master for " + team.getName())
+                            .message("You have been designated as Program Manager / Scrum Master for " + team.getName())
+                            .linkUrl("/teams")
+                            .isRead(false)
+                            .build());
+                }
+            });
         }
 
         if (payload.get("memberIds") instanceof List) {
             List<?> memberIds = (List<?>) payload.get("memberIds");
             team.setMemberCount(Math.max(1, memberIds.size()));
+
+            for (Object mIdObj : memberIds) {
+                try {
+                    Long mId = Long.valueOf(mIdObj.toString());
+                    employeeRepository.findById(mId).ifPresent(emp -> {
+                        if (emp.getUser() != null) {
+                            notificationRepository.save(Notification.builder()
+                                    .recipient(emp.getUser())
+                                    .title("Assigned to Squad: " + team.getName())
+                                    .message("You were added to the " + team.getName() + " delivery team.")
+                                    .linkUrl("/teams")
+                                    .isRead(false)
+                                    .build());
+                        }
+                    });
+                } catch (Exception ignored) {}
+            }
         } else {
             team.setMemberCount(1);
         }
@@ -79,7 +128,24 @@ public class TeamController {
         team.setPrdDocument(team.getName().replaceAll("\\s+", "_") + "_PRD_Spec.pdf");
 
         Team created = teamRepository.save(team);
+
+        // Update Project team relation if project is present
+        if (project != null) {
+            project.setTeam(created);
+            projectRepository.save(project);
+        }
+
+        // Create Audit Log
+        AuditLog audit = AuditLog.builder()
+                .action("TEAM_CREATED")
+                .entityName("Team")
+                .entityId(created.getId())
+                .details("Created Delivery Team '" + created.getName() + "'" + (project != null ? " for project " + project.getTitle() : ""))
+                .ipAddress(request.getRemoteAddr())
+                .build();
+        auditLogRepository.save(audit);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(created, "Team created successfully", request.getRequestURI()));
+                .body(ApiResponse.success(created, "Team created and team members notified successfully", request.getRequestURI()));
     }
 }

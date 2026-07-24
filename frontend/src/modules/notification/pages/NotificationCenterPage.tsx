@@ -63,13 +63,26 @@ export const NotificationCenterPage: React.FC = () => {
   const [organizations, setOrganizations] = useState<any[]>([]);
 
   useEffect(() => {
-    api.get('/audit-logs')
-      .then(() => {
-        setNotifications([]);
+    api.get('/notifications')
+      .then((res) => {
+        const raw = res.data?.data?.content || res.data?.data;
+        if (Array.isArray(raw) && raw.length > 0) {
+          const list: OrganizationNotification[] = raw.map((n: any) => ({
+            id: n.id,
+            title: n.title,
+            organization: n.recipient?.organization || 'SPEMS Enterprise HQ',
+            department: n.recipient?.department?.name || 'Engineering',
+            category: n.title.includes('Team') || n.title.includes('Squad') ? 'Department Assignment' : 'Task Assigned',
+            employeeName: n.message,
+            time: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : 'Just Now',
+            isRead: n.isRead ?? false,
+          }));
+          setNotifications(list);
+        } else {
+          setNotifications([]);
+        }
       })
-      .catch(() => {
-        setNotifications([]);
-      });
+      .catch(() => setNotifications([]));
 
     api.get('/clients')
       .then((res) => {

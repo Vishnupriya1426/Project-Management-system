@@ -20,6 +20,7 @@ public class DashboardController {
     private final DepartmentRepository departmentRepository;
     private final ClientRepository clientRepository;
     private final TaskRepository taskRepository;
+    private final TeamRepository teamRepository;
 
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats(HttpServletRequest request) {
@@ -30,13 +31,14 @@ public class DashboardController {
         long totalDepartments = departmentRepository.count();
         long totalClients = clientRepository.count();
         long totalTasks = taskRepository.count();
+        long totalTeams = teamRepository.count();
 
-        // Dynamic metrics backed by DB storage
-        stats.put("totalEmployees", totalEmployees > 0 ? totalEmployees : 145);
-        stats.put("activeProjects", activeProjects > 0 ? activeProjects : 18);
-        stats.put("totalDepartments", totalDepartments > 0 ? totalDepartments : 8);
-        stats.put("totalClients", totalClients > 0 ? totalClients : 14);
-        stats.put("totalTasks", totalTasks > 0 ? totalTasks : 120);
+        stats.put("totalEmployees", totalEmployees);
+        stats.put("activeProjects", activeProjects);
+        stats.put("totalDepartments", totalDepartments);
+        stats.put("totalClients", totalClients);
+        stats.put("totalTasks", totalTasks);
+        stats.put("totalTeams", totalTeams);
 
         return ResponseEntity.ok(ApiResponse.success(stats, "Dashboard statistics retrieved successfully", request.getRequestURI()));
     }

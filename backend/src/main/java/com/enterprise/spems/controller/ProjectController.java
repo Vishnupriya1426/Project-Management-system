@@ -65,6 +65,20 @@ public class ProjectController {
                 map.put("projectManager", pmMap);
             }
 
+            if (p.getTeam() != null) {
+                Map<String, Object> tMap = new HashMap<>();
+                tMap.put("id", p.getTeam().getId());
+                tMap.put("name", p.getTeam().getName());
+                tMap.put("memberCount", p.getTeam().getMemberCount());
+                if (p.getTeam().getTeamLead() != null) {
+                    tMap.put("teamLeadName", p.getTeam().getTeamLead().getFirstName() + " " + p.getTeam().getTeamLead().getLastName());
+                }
+                if (p.getTeam().getScrumMaster() != null) {
+                    tMap.put("scrumMasterName", p.getTeam().getScrumMaster().getFirstName() + " " + p.getTeam().getScrumMaster().getLastName());
+                }
+                map.put("team", tMap);
+            }
+
             result.add(map);
         }
 
@@ -116,6 +130,22 @@ public class ProjectController {
             map.put("managerName", p.getProjectManager().getFirstName() + " " + p.getProjectManager().getLastName());
         } else {
             map.put("managerName", "Unassigned PM");
+        }
+
+        if (p.getTeam() != null) {
+            Map<String, Object> tMap = new HashMap<>();
+            tMap.put("id", p.getTeam().getId());
+            tMap.put("name", p.getTeam().getName());
+            tMap.put("memberCount", p.getTeam().getMemberCount());
+            tMap.put("deadline", p.getTeam().getDeadline());
+            tMap.put("prdDocument", p.getTeam().getPrdDocument());
+            if (p.getTeam().getTeamLead() != null) {
+                tMap.put("teamLeadName", p.getTeam().getTeamLead().getFirstName() + " " + p.getTeam().getTeamLead().getLastName());
+            }
+            if (p.getTeam().getScrumMaster() != null) {
+                tMap.put("scrumMasterName", p.getTeam().getScrumMaster().getFirstName() + " " + p.getTeam().getScrumMaster().getLastName());
+            }
+            map.put("team", tMap);
         }
 
         // Fetch associated proposal documents
