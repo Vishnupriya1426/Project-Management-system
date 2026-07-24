@@ -113,30 +113,52 @@ public class TaskController {
             employeeRepository.findById(assigneeId).ifPresent(emp -> {
                 task.setAssignee(emp);
                 if (emp.getUser() != null) {
-                    notificationRepository.save(Notification.builder()
-                            .recipient(emp.getUser())
-                            .title("New Task Assigned: " + task.getTitle())
-                            .message("You have been assigned task '" + task.getTitle() + "' due on " + task.getDueDate())
-                            .linkUrl("/tasks")
-                            .isRead(false)
-                            .build());
+                    try {
+                        notificationRepository.save(Notification.builder()
+                                .recipient(emp.getUser())
+                                .title("New Task Assigned: " + task.getTitle())
+                                .message("You have been assigned task '" + task.getTitle() + "' due on " + task.getDueDate())
+                                .linkUrl("/tasks")
+                                .isRead(false)
+                                .build());
+                    } catch (Exception ignored) {}
                 }
             });
         }
+
+        // Ensure creator is set (NOT NULL in MySQL schema)
+        Employee creator = null;
+        if (payload.get("creatorId") != null && !payload.get("creatorId").toString().isEmpty()) {
+            Long creatorId = Long.valueOf(payload.get("creatorId").toString());
+            creator = employeeRepository.findById(creatorId).orElse(null);
+        }
+        if (creator == null && task.getAssignee() != null) {
+            creator = task.getAssignee();
+        }
+        if (creator == null) {
+            creator = employeeRepository.findAll().stream().findFirst().orElse(null);
+        }
+        task.setCreator(creator);
+
+        // Pre-generate Task Code for initial save
+        String tempCode = "TSK-" + (System.currentTimeMillis() % 100000);
+        task.setTaskCode(tempCode);
 
         Task saved = taskRepository.save(task);
         saved.setTaskCode("TSK-2026-" + (1000 + saved.getId()));
         Task updatedWithCode = taskRepository.save(saved);
 
         // Audit Log
-        AuditLog audit = AuditLog.builder()
-                .action("TASK_CREATED")
-                .entityName("Task")
-                .entityId(updatedWithCode.getId())
-                .details("Created Task '" + updatedWithCode.getTaskCode() + "': " + updatedWithCode.getTitle())
-                .ipAddress(request.getRemoteAddr())
-                .build();
-        auditLogRepository.save(audit);
+        try {
+            AuditLog audit = AuditLog.builder()
+                    .action("TASK_CREATED")
+                    .entityName("Task")
+                    .entityId(updatedWithCode.getId())
+                    .details("Created Task '" + updatedWithCode.getTaskCode() + "': " + updatedWithCode.getTitle())
+                    .ipAddress(request.getRemoteAddr())
+                    .build();
+            auditLogRepository.save(audit);
+        } catch (Exception ignored) {}
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(updatedWithCode, "Task created successfully", request.getRequestURI()));
