@@ -5,11 +5,13 @@ import com.enterprise.spems.model.entity.AuditLog;
 import com.enterprise.spems.model.entity.Employee;
 import com.enterprise.spems.model.entity.Notification;
 import com.enterprise.spems.model.entity.Project;
+import com.enterprise.spems.model.entity.Sprint;
 import com.enterprise.spems.model.entity.Team;
 import com.enterprise.spems.repository.AuditLogRepository;
 import com.enterprise.spems.repository.EmployeeRepository;
 import com.enterprise.spems.repository.NotificationRepository;
 import com.enterprise.spems.repository.ProjectRepository;
+import com.enterprise.spems.repository.SprintRepository;
 import com.enterprise.spems.repository.TeamRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class TeamController {
     private final EmployeeRepository employeeRepository;
     private final NotificationRepository notificationRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SprintRepository sprintRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Team>>> getAllTeams(HttpServletRequest request) {
@@ -113,16 +116,24 @@ public class TeamController {
             team.setDeadline(payload.get("endDate").toString());
         }
 
+        int sprintCapacityHours = 80;
         if (payload.get("sprintCapacity") != null) {
             try {
-                int capacity = Integer.parseInt(payload.get("sprintCapacity").toString());
-                int capPercent = Math.min(100, Math.max(50, (capacity * 100) / 100));
+                sprintCapacityHours = Integer.parseInt(payload.get("sprintCapacity").toString());
+                int capPercent = Math.min(100, Math.max(50, (sprintCapacityHours * 100) / 100));
                 team.setCapacityUtilization(capPercent);
             } catch (Exception ignored) {
                 team.setCapacityUtilization(80);
             }
         } else {
             team.setCapacityUtilization(80);
+        }
+
+        int estimatedPts = 40;
+        if (payload.get("estimatedStoryPoints") != null) {
+            try {
+                estimatedPts = Integer.parseInt(payload.get("estimatedStoryPoints").toString());
+            } catch (Exception ignored) {}
         }
 
         team.setPrdDocument(team.getName().replaceAll("\\s+", "_") + "_PRD_Spec.pdf");
@@ -133,6 +144,21 @@ public class TeamController {
         if (project != null) {
             project.setTeam(created);
             projectRepository.save(project);
+
+            // Auto-initialize Sprint 1 for this team & project
+            Sprint sprint1 = Sprint.builder()
+                    .sprintName("Sprint 1 - " + created.getName())
+                    .project(project)
+                    .team(created)
+                    .startDate((String) payload.getOrDefault("startDate", "2026-07-25"))
+                    .endDate((String) payload.getOrDefault("endDate", "2026-08-08"))
+                    .goal("Initialize " + created.getName() + " velocity, environment setup, and foundational features.")
+                    .capacityHours(sprintCapacityHours)
+                    .storyPoints(estimatedPts)
+                    .completedPoints(0)
+                    .status("ACTIVE")
+                    .build();
+            sprintRepository.save(sprint1);
         }
 
         // Create Audit Log
@@ -140,12 +166,12 @@ public class TeamController {
                 .action("TEAM_CREATED")
                 .entityName("Team")
                 .entityId(created.getId())
-                .details("Created Delivery Team '" + created.getName() + "'" + (project != null ? " for project " + project.getTitle() : ""))
+                .details("Created Delivery Team '" + created.getName() + "'" + (project != null ? " for project " + project.getTitle() : "") + " and auto-initialized Sprint 1")
                 .ipAddress(request.getRemoteAddr())
                 .build();
         auditLogRepository.save(audit);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(created, "Team created and team members notified successfully", request.getRequestURI()));
+                .body(ApiResponse.success(created, "Team created and Sprint 1 auto-initialized successfully", request.getRequestURI()));
     }
 }

@@ -125,57 +125,65 @@ export const MilestoneListPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {milestones.map((m) => (
-                <TableRow key={m.id} hover>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <MilestoneIcon color="primary" fontSize="small" />
-                    {m.milestoneName}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{m.projectName}</TableCell>
-                  <TableCell>{m.dueDate}</TableCell>
-                  <TableCell>{m.owner}</TableCell>
-                  <TableCell sx={{ width: 140 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <LinearProgress variant="determinate" value={m.completionPct} sx={{ flexGrow: 1, height: 8, borderRadius: 4 }} />
-                      <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                        {m.completionPct}%
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={m.status}
-                      size="small"
-                      color={m.status === 'COMPLETED' ? 'success' : m.status === 'IN_PROGRESS' ? 'primary' : 'warning'}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5}>
-                      {m.status !== 'COMPLETED' && (
-                        <>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleIncrementProgress(m)}
-                          >
-                            +25%
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color="success"
-                            startIcon={<CompleteIcon />}
-                            onClick={() => handleToggleComplete(m.id)}
-                          >
-                            Complete
-                          </Button>
-                        </>
-                      )}
-                    </Stack>
+              {milestones.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No milestones created yet. Click "+ Create Milestone" to schedule a project deliverable.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                milestones.map((m) => (
+                  <TableRow key={m.id} hover>
+                    <TableCell sx={{ fontWeight: 700, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <MilestoneIcon color="primary" fontSize="small" />
+                      {m.milestoneName}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>{m.projectName || 'Unassigned'}</TableCell>
+                    <TableCell>{m.dueDate || 'No Due Date'}</TableCell>
+                    <TableCell>{m.owner || 'Unassigned Lead'}</TableCell>
+                    <TableCell sx={{ width: 140 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <LinearProgress variant="determinate" value={m.completionPct} sx={{ flexGrow: 1, height: 8, borderRadius: 4 }} />
+                        <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                          {m.completionPct}%
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={m.status}
+                        size="small"
+                        color={m.status === 'COMPLETED' ? 'success' : m.status === 'IN_PROGRESS' ? 'primary' : 'warning'}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5}>
+                        {m.status !== 'COMPLETED' && (
+                          <>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                              onClick={() => handleIncrementProgress(m)}
+                            >
+                              +25%
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="success"
+                              startIcon={<CompleteIcon />}
+                              onClick={() => handleToggleComplete(m.id)}
+                            >
+                              Complete
+                            </Button>
+                          </>
+                        )}
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>

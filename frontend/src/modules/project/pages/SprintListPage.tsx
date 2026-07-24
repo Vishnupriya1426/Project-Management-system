@@ -133,70 +133,78 @@ export const SprintListPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {sprints.map((s) => {
-                const burnPct = s.storyPoints > 0 ? Math.round((s.completedPoints / s.storyPoints) * 100) : 0;
-                return (
-                  <TableRow key={s.id} hover>
-                    <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{s.sprintName}</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>{s.projectName}</TableCell>
-                    <TableCell>{`${s.startDate} ➔ ${s.endDate}`}</TableCell>
-                    <TableCell>{s.goal}</TableCell>
-                    <TableCell>{s.capacityHours} hrs</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{`${s.completedPoints} / ${s.storyPoints} pts`}</TableCell>
-                    <TableCell sx={{ width: 140 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <LinearProgress variant="determinate" value={burnPct} sx={{ flexGrow: 1, height: 8, borderRadius: 4 }} />
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                          {burnPct}%
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={s.status}
-                        size="small"
-                        color={s.status === 'ACTIVE' ? 'primary' : s.status === 'CLOSED' ? 'success' : 'default'}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={0.5}>
-                        {s.status === 'PLANNING' && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="success"
-                            startIcon={<StartIcon />}
-                            onClick={() => handleUpdateStatus(s.id, 'ACTIVE')}
-                          >
-                            Start
-                          </Button>
-                        )}
-                        {s.status === 'ACTIVE' && (
-                          <>
+              {sprints.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No agile sprints created yet. Form a team or click "+ Create Sprint" to start a sprint.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                sprints.map((s) => {
+                  const burnPct = s.storyPoints > 0 ? Math.round((s.completedPoints / s.storyPoints) * 100) : 0;
+                  return (
+                    <TableRow key={s.id} hover>
+                      <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{s.sprintName}</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>{s.projectName || 'Unassigned'}</TableCell>
+                      <TableCell>{`${s.startDate || ''} ➔ ${s.endDate || ''}`}</TableCell>
+                      <TableCell>{s.goal || 'Sprint Goal'}</TableCell>
+                      <TableCell>{s.capacityHours || 80} hrs</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>{`${s.completedPoints || 0} / ${s.storyPoints || 40} pts`}</TableCell>
+                      <TableCell sx={{ width: 140 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <LinearProgress variant="determinate" value={burnPct} sx={{ flexGrow: 1, height: 8, borderRadius: 4 }} />
+                          <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                            {burnPct}%
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={s.status}
+                          size="small"
+                          color={s.status === 'ACTIVE' ? 'primary' : s.status === 'CLOSED' ? 'success' : 'default'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={0.5}>
+                          {s.status === 'PLANNING' && (
                             <Button
                               size="small"
                               variant="outlined"
-                              color="primary"
-                              onClick={() => handleIncrementPoints(s)}
+                              color="success"
+                              startIcon={<StartIcon />}
+                              onClick={() => handleUpdateStatus(s.id, 'ACTIVE')}
                             >
-                              +10 Pts
+                              Start
                             </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              color="warning"
-                              startIcon={<CloseIcon />}
-                              onClick={() => handleUpdateStatus(s.id, 'CLOSED')}
-                            >
-                              Close
-                            </Button>
-                          </>
-                        )}
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                          )}
+                          {s.status === 'ACTIVE' && (
+                            <>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => handleIncrementPoints(s)}
+                              >
+                                +10 Pts
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="warning"
+                                startIcon={<CloseIcon />}
+                                onClick={() => handleUpdateStatus(s.id, 'CLOSED')}
+                              >
+                                Close
+                              </Button>
+                            </>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </TableContainer>

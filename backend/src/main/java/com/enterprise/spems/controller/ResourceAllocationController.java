@@ -58,7 +58,7 @@ public class ResourceAllocationController {
             HttpServletRequest request) {
 
         if (payload.get("employeeId") == null || payload.get("projectId") == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(400, "employeeId and projectId are required", request.getRequestURI()));
+            return ResponseEntity.badRequest().body(ApiResponse.error("employeeId and projectId are required", request.getRequestURI()));
         }
 
         Long employeeId = Long.valueOf(payload.get("employeeId").toString());
@@ -68,7 +68,7 @@ public class ResourceAllocationController {
         Project project = projectRepository.findById(projectId).orElse(null);
 
         if (employee == null || project == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(400, "Invalid employeeId or projectId", request.getRequestURI()));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid employeeId or projectId", request.getRequestURI()));
         }
 
         Team team = null;
