@@ -29,7 +29,6 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  FileUpload as ImportIcon,
   FileDownload as ExportIcon,
   MoreVert as MoreVertIcon,
   Visibility as ViewIcon,
@@ -45,6 +44,8 @@ import { EditEmployeeWizardModal } from '../components/EditEmployeeWizardModal';
 import { AssignProjectDialogModal } from '../components/AssignProjectDialogModal';
 import { TransferDepartmentModal } from '../components/TransferDepartmentModal';
 import api from '../../../config/axios.config';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface Employee {
   id: number;
@@ -248,6 +249,66 @@ export const EmployeeListPage: React.FC = () => {
     'Documents', 'Performance', 'Activity & Audit'
   ];
 
+  const handleExportPDF = async () => {
+    const tableEl = document.getElementById('employee-directory-table-container');
+    if (!tableEl) return;
+
+    try {
+      setNotice('Generating Employee Directory Table PDF report...');
+      const canvas = await html2canvas(tableEl, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('landscape', 'pt', [canvas.width, canvas.height + 120]);
+
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, canvas.width, canvas.height + 120, 'F');
+
+      pdf.setFontSize(24);
+      pdf.setTextColor(25, 118, 210);
+      pdf.text("SPEMS Enterprise - Master Employee Directory Report", 40, 50);
+
+      pdf.setFontSize(12);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Exported On: ${new Date().toLocaleString()} | Total Employee Records: ${filteredEmployees.length}`, 40, 75);
+
+      pdf.addImage(imgData, 'PNG', 0, 95, canvas.width, canvas.height);
+      pdf.save(`SPEMS_Employee_Directory_${new Date().toISOString().split('T')[0]}.pdf`);
+      setNotice('Employee Directory Table exported to PDF successfully!');
+    } catch (err) {
+      setNotice('Failed to export PDF report.');
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const headers = ['Employee ID', 'Full Name', 'Email', 'Phone', 'Organization', 'Department', 'Role', 'Designation', 'Manager', 'Status', 'Joining Date'];
+      const rows = filteredEmployees.map((e) => [
+        `"${e.empId}"`,
+        `"${e.name}"`,
+        `"${e.email}"`,
+        `"${e.phone}"`,
+        `"${e.organization}"`,
+        `"${e.department}"`,
+        `"${e.role}"`,
+        `"${e.designation}"`,
+        `"${e.manager}"`,
+        `"${e.status}"`,
+        `"${e.joiningDate}"`,
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `SPEMS_Employee_Directory_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setNotice('Employee Directory Excel (CSV) file downloaded successfully!');
+    } catch (err) {
+      setNotice('Failed to download Excel file.');
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
@@ -264,9 +325,12 @@ export const EmployeeListPage: React.FC = () => {
           <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setWizardOpen(true)}>
             + Add Employee
           </Button>
-          <Button variant="outlined" startIcon={<ImportIcon />}>Import Excel</Button>
-          <Button variant="outlined" startIcon={<ExportIcon />}>Export Excel</Button>
-          <Button variant="outlined" startIcon={<ExportIcon />}>Export PDF</Button>
+          <Button variant="outlined" color="primary" startIcon={<ExportIcon />} onClick={handleExportExcel}>
+            Export Excel
+          </Button>
+          <Button variant="contained" color="secondary" startIcon={<ExportIcon />} onClick={handleExportPDF}>
+            Export PDF
+          </Button>
         </Stack>
       </Box>
 
@@ -342,7 +406,7 @@ export const EmployeeListPage: React.FC = () => {
 
       {/* Employees Table */}
       <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <TableContainer>
+        <TableContainer id="employee-directory-table-container">
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: 'action.hover' }}>
