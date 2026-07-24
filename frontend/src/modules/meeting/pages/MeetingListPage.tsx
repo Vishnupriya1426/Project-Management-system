@@ -11,8 +11,6 @@ import {
   TableRow,
   Button,
   Chip,
-  AvatarGroup,
-  Avatar,
   Tooltip,
   Alert,
   Stack,
@@ -50,7 +48,6 @@ interface MeetingItem {
   endTime: string;
   meetingUrl: string;
   agenda: string;
-  participantsCount: number;
   momUploaded?: boolean;
 }
 
@@ -66,29 +63,29 @@ export const MeetingListPage: React.FC = () => {
 
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
 
-  useEffect(() => {
+  const fetchMeetings = () => {
     api.get('/meetings')
       .then((res) => {
-        if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
-          const fetched: MeetingItem[] = res.data.data.map((m: any) => ({
+        const raw = res.data?.data?.content || res.data?.data;
+        if (Array.isArray(raw)) {
+          const fetched: MeetingItem[] = raw.map((m: any) => ({
             id: m.id,
-            meetingId: m.meetingId || `MTG-2026-90${m.id}`,
-            title: m.title,
-            type: m.type || 'Sync Meeting',
+            meetingId: `MTG-2026-${1000 + m.id}`,
+            title: m.title ?? '',
+            type: m.meetingType || 'Sync Meeting',
             priority: m.priority || 'HIGH',
-            status: m.status || 'Scheduled',
-            organization: 'SPEMS Enterprise HQ',
+            status: m.status || 'SCHEDULED',
+            organization: m.clientName || 'SPEMS Enterprise HQ',
             department: 'Engineering',
-            team: 'Alpha Pod',
-            project: m.project ? m.project.title : 'Enterprise Cloud Migration',
-            organizer: m.organizer ? m.organizer.firstName : 'Super Admin',
-            meetingDate: m.meetingDate || '2026-07-25',
-            startTime: m.startTime || '10:00 AM',
-            endTime: m.endTime || '11:00 AM',
-            meetingUrl: m.meetingUrl || 'https://meet.google.com/spems-sync',
-            agenda: m.agenda || 'Project agenda review',
-            participantsCount: m.participantsCount || 5,
-            momUploaded: true,
+            team: m.teamName || 'All Pods',
+            project: m.projectName || 'Enterprise Workspace',
+            organizer: 'Project Lead',
+            meetingDate: m.meetingDate || 'N/A',
+            startTime: m.startTime || '10:00',
+            endTime: m.endTime || '11:00',
+            meetingUrl: m.meetingUrl || m.meetingLink || 'https://meet.google.com/spems-sync',
+            agenda: m.agenda || 'Meeting Agenda',
+            momUploaded: false,
           }));
           setMeetings(fetched);
         } else {
@@ -98,32 +95,15 @@ export const MeetingListPage: React.FC = () => {
       .catch(() => {
         setMeetings([]);
       });
+  };
+
+  useEffect(() => {
+    fetchMeetings();
   }, []);
 
   const handleMeetingScheduled = (meetingData: any) => {
-    const newM: MeetingItem = {
-      id: meetingData.id,
-      meetingId: meetingData.meetingId,
-      title: meetingData.title,
-      type: meetingData.type,
-      priority: meetingData.priority,
-      status: meetingData.status,
-      organization: meetingData.organization,
-      department: meetingData.department,
-      team: meetingData.team,
-      project: meetingData.project,
-      organizer: meetingData.organizer,
-      meetingDate: meetingData.meetingDate,
-      startTime: meetingData.startTime,
-      endTime: meetingData.endTime,
-      meetingUrl: meetingData.meetingUrl,
-      agenda: meetingData.agenda,
-      participantsCount: meetingData.participants.length,
-      momUploaded: false,
-    };
-
-    setMeetings([newM, ...meetings]);
-    setNotice(`Meeting "${newM.title}" (${newM.meetingId}) scheduled! All Calendars, Employee Dashboards, Client Portals, and HTML email invitations synchronized.`);
+    setNotice(`Meeting "${meetingData.title || 'New Meeting'}" scheduled successfully! Cross-module calendars and notification channels updated.`);
+    fetchMeetings();
   };
 
   const handleSaveMoM = () => {
@@ -139,7 +119,7 @@ export const MeetingListPage: React.FC = () => {
             Enterprise Meeting Management & Governance
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Cascading Organization selection, automatic calendar sync, email dispatch, and Action Item task conversion
+            Role-based meeting scheduling, automatic calendar sync, email dispatch, and Action Item task conversion
           </Typography>
         </div>
 
@@ -167,90 +147,89 @@ export const MeetingListPage: React.FC = () => {
             <TableHead>
               <TableRow sx={{ bgcolor: 'action.hover' }}>
                 <TableCell sx={{ fontWeight: 700 }}>Meeting ID & Title</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Type & Priority</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Organization Context</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Type & Scope</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Context</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Date & Time</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Participants</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>MoM Status</TableCell>
                 <TableCell sx={{ fontWeight: 700 }} align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {meetings.map((m) => (
-                <TableRow key={m.id} hover>
-                  <TableCell>
-                    <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', display: 'block' }}>
-                      {m.meetingId}
-                    </Typography>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      {m.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 300, display: 'block' }}>
-                      {m.agenda.split('\n')[0]}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Stack spacing={0.5} alignItems="flex-start">
-                      <Chip label={m.type} size="small" color="primary" variant="outlined" />
-                      <Chip
-                        label={m.priority}
-                        size="small"
-                        color={m.priority === 'CRITICAL' ? 'error' : m.priority === 'HIGH' ? 'warning' : 'success'}
-                        sx={{ height: 18, fontSize: '0.65rem' }}
-                      />
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <OrgIcon fontSize="small" color="action" /> {m.organization}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {m.department} • {m.project}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{m.meetingDate}</Typography>
-                    <Typography variant="caption" color="text.secondary">{m.startTime} - {m.endTime}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <AvatarGroup max={3}>
-                      <Avatar sx={{ bgcolor: '#0078D4', width: 28, height: 28, fontSize: '0.75rem' }}>SC</Avatar>
-                      <Avatar sx={{ bgcolor: '#008272', width: 28, height: 28, fontSize: '0.75rem' }}>AM</Avatar>
-                      <Avatar sx={{ bgcolor: '#D83B01', width: 28, height: 28, fontSize: '0.75rem' }}>JD</Avatar>
-                    </AvatarGroup>
-                    <Typography variant="caption" color="text.secondary">({m.participantsCount} invited)</Typography>
-                  </TableCell>
-                  <TableCell>
-                    {m.momUploaded ? (
-                      <Chip icon={<DocIcon />} label="MoM Recorded" color="success" size="small" />
-                    ) : (
-                      <Chip
-                        icon={<AttendanceIcon />}
-                        label="Pending MoM"
-                        color="warning"
-                        size="small"
-                        clickable
-                        onClick={() => { setSelectedMeetingTitle(m.title); setMomDialogOpen(true); }}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Join Virtual Meeting Room">
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color="secondary"
-                        startIcon={<VideoCallIcon />}
-                        href={m.meetingUrl}
-                        target="_blank"
-                        sx={{ fontWeight: 700 }}
-                      >
-                        Join Room
-                      </Button>
-                    </Tooltip>
+              {meetings.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No scheduled meetings yet. Click "+ Schedule Enterprise Meeting" to host a sync.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                meetings.map((m) => (
+                  <TableRow key={m.id} hover>
+                    <TableCell>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', display: 'block' }}>
+                        {m.meetingId}
+                      </Typography>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        {m.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 300, display: 'block' }}>
+                        {m.agenda}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Stack spacing={0.5} alignItems="flex-start">
+                        <Chip label={m.type} size="small" color="primary" variant="outlined" />
+                        <Chip
+                          label={m.status}
+                          size="small"
+                          color={m.status === 'SCHEDULED' ? 'success' : 'default'}
+                          sx={{ height: 18, fontSize: '0.65rem' }}
+                        />
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <OrgIcon fontSize="small" color="action" /> {m.organization}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {m.team} • {m.project}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>{m.meetingDate}</Typography>
+                      <Typography variant="caption" color="text.secondary">{m.startTime} - {m.endTime}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {m.momUploaded ? (
+                        <Chip icon={<DocIcon />} label="MoM Recorded" color="success" size="small" />
+                      ) : (
+                        <Chip
+                          icon={<AttendanceIcon />}
+                          label="Pending MoM"
+                          color="warning"
+                          size="small"
+                          clickable
+                          onClick={() => { setSelectedMeetingTitle(m.title); setMomDialogOpen(true); }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Join Virtual Meeting Room">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="secondary"
+                          startIcon={<VideoCallIcon />}
+                          href={m.meetingUrl}
+                          target="_blank"
+                          sx={{ fontWeight: 700 }}
+                        >
+                          Join Room
+                        </Button>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
